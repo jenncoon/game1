@@ -1,0 +1,1808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Road Test | Concept Game Showcase</title>
+<style>
+  :root {
+    --blue: #2E4A7A;
+    --blue-light: #3D5F9A;
+    --blue-dark: #1E3560;
+    --amber: #E8A020;
+    --amber-light: #F5B83D;
+    --amber-pale: #FFF3D6;
+    --teal: #3A8C6E;
+    --teal-light: #4BA882;
+    --red: #C0392B;
+    --cream: #FAF7F2;
+    --cream-dark: #F0EBE3;
+    --road-gray: #4A5568;
+    --asphalt: #2D3748;
+    --white: #FFFFFF;
+    --text-dark: #1A1A2E;
+    --text-mid: #3A3A50;
+    --text-light: #6B6B85;
+    --border: #D8D0C4;
+    --shadow: rgba(46, 74, 122, 0.12);
+    --shadow-warm: rgba(232, 160, 32, 0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    background: var(--cream);
+    color: var(--text-dark);
+    min-height: 100vh;
+  }
+
+  .skip-link {
+    position: absolute; left: -9999px; top: 4px;
+    background: var(--blue); color: #fff;
+    padding: 8px 16px; border-radius: 4px;
+    font-size: 0.875rem; z-index: 9999; text-decoration: none;
+  }
+  .skip-link:focus { left: 4px; }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  .screen { display: none; min-height: 100vh; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* ===== HEADER ===== */
+  .game-header {
+    background: var(--asphalt);
+    color: #fff;
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .header-title .car-icon { font-size: 1.4rem; }
+  .header-title h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--amber);
+  }
+  .header-badge {
+    background: var(--amber);
+    color: var(--text-dark);
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* ===== ROAD PROGRESS ===== */
+  .road-progress {
+    background: var(--road-gray);
+    padding: 14px 28px;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .road-track {
+    position: relative;
+    height: 28px;
+    background: var(--asphalt);
+    border-radius: 14px;
+    overflow: visible;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  /* dashed center line */
+  .road-track::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 8px;
+    right: 8px;
+    height: 2px;
+    background: repeating-linear-gradient(
+      to right,
+      rgba(255,255,255,0.35) 0px,
+      rgba(255,255,255,0.35) 12px,
+      transparent 12px,
+      transparent 22px
+    );
+    transform: translateY(-50%);
+  }
+  .road-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue) 0%, var(--blue-light) 100%);
+    border-radius: 14px;
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    min-width: 28px;
+  }
+  .road-car {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%) scaleX(-1);
+    font-size: 1.3rem;
+    transition: left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    z-index: 2;
+  }
+  .road-stops {
+    display: flex;
+    justify-content: space-between;
+    max-width: 600px;
+    margin: 6px auto 0;
+    padding: 0 4px;
+  }
+  .road-stop {
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.55);
+    text-align: center;
+    letter-spacing: 0.04em;
+    transition: color 0.3s;
+  }
+  .road-stop.reached { color: var(--amber); font-weight: bold; }
+
+  /* ===== MAIN ===== */
+  main {
+    flex: 1;
+    padding: 28px 24px;
+    max-width: 780px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* ===== INTRO ===== */
+  #screen-intro { background: var(--cream); }
+
+  .intro-wrap {
+    max-width: 580px;
+    margin: 0 auto;
+    padding: 40px 0 20px;
+    text-align: center;
+  }
+  .car-hero {
+    font-size: 5rem;
+    margin-bottom: 16px;
+    display: block;
+    filter: drop-shadow(0 4px 12px var(--shadow-warm));
+  }
+  .intro-wrap h2 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--blue);
+    line-height: 1.15;
+    margin-bottom: 12px;
+  }
+  .intro-wrap h2 span { color: var(--amber); }
+  .intro-wrap p {
+    font-size: 1rem;
+    color: var(--text-mid);
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+  .intro-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+  .chip {
+    background: var(--asphalt);
+    color: #fff;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    letter-spacing: 0.03em;
+  }
+  .chip.amber { background: var(--amber); color: var(--text-dark); font-weight: bold; }
+
+  .name-form {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px var(--shadow);
+    text-align: left;
+  }
+  .name-form label {
+    display: block;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-mid);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .name-form input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: inherit;
+    background: var(--cream);
+    color: var(--text-dark);
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+  }
+  .name-form input:focus {
+    outline: 3px solid var(--amber);
+    outline-offset: 2px;
+    border-color: var(--blue);
+  }
+
+  /* ===== BUTTONS ===== */
+  .btn-go {
+    background: var(--amber);
+    color: var(--text-dark);
+    border: none;
+    padding: 14px 36px;
+    font-size: 1.05rem;
+    font-family: inherit;
+    font-weight: 800;
+    border-radius: 50px;
+    cursor: pointer;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 14px var(--shadow-warm);
+    display: inline-block;
+  }
+  .btn-go:hover { background: var(--amber-light); transform: translateY(-2px); box-shadow: 0 6px 18px var(--shadow-warm); }
+  .btn-go:active { transform: scale(0.97); }
+  .btn-go:focus { outline: 3px solid var(--blue); outline-offset: 3px; }
+  .btn-go:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .btn-blue {
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    padding: 13px 30px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    font-weight: 700;
+    border-radius: 50px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: background 0.2s, transform 0.1s;
+    display: inline-block;
+  }
+  .btn-blue:hover { background: var(--blue-light); }
+  .btn-blue:active { transform: scale(0.97); }
+  .btn-blue:focus { outline: 3px solid var(--amber); outline-offset: 3px; }
+  .btn-blue:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .btn-teal {
+    background: var(--teal);
+    color: #fff;
+    border: none;
+    padding: 13px 30px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    font-weight: 700;
+    border-radius: 50px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: background 0.2s;
+    display: inline-block;
+  }
+  .btn-teal:hover { background: var(--teal-light); }
+  .btn-teal:focus { outline: 3px solid var(--amber); outline-offset: 3px; }
+
+  /* ===== SCENARIO CARDS ===== */
+  .scenario-screen { background: var(--cream); }
+
+  .scenario-header {
+    margin-bottom: 20px;
+  }
+  .stop-label {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 6px;
+  }
+  .scenario-title {
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: var(--blue);
+    line-height: 1.25;
+  }
+
+  .scenario-card {
+    background: var(--white);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 6px 24px var(--shadow);
+    margin-bottom: 20px;
+  }
+  .scenario-card-top {
+    background: linear-gradient(135deg, var(--blue) 0%, var(--blue-light) 100%);
+    padding: 22px 24px;
+    color: #fff;
+  }
+  .scenario-card-top .scenario-icon {
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .scenario-situation {
+    font-size: 1rem;
+    line-height: 1.65;
+    opacity: 0.95;
+  }
+  .scenario-reveal-line {
+    display: block;
+    margin-bottom: 4px;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .scenario-reveal-line.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .scenario-card-bottom {
+    padding: 22px 24px;
+  }
+  .scenario-question {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--blue);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .answer-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .answer-btn {
+    background: var(--cream);
+    border: 2px solid var(--border);
+    padding: 12px 16px;
+    border-radius: 12px;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.92rem;
+    color: var(--text-dark);
+    line-height: 1.5;
+    transition: border-color 0.2s, background 0.2s, transform 0.1s;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .answer-btn:hover:not(:disabled) {
+    border-color: var(--amber);
+    background: var(--amber-pale);
+    transform: translateX(3px);
+  }
+  .answer-btn:focus { outline: 3px solid var(--amber); outline-offset: 2px; }
+  .answer-btn:disabled { cursor: default; transform: none; }
+  .answer-btn .ans-letter {
+    background: var(--blue);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 800;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .answer-btn.correct { background: #EBF7F3; border-color: var(--teal); }
+  .answer-btn.correct .ans-letter { background: var(--teal); }
+  .answer-btn.incorrect { background: #FDECEA; border-color: var(--red); }
+  .answer-btn.incorrect .ans-letter { background: var(--red); }
+
+  .feedback-box {
+    margin-top: 14px;
+    padding: 13px 16px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    display: none;
+  }
+  .feedback-box.hint {
+    background: var(--amber-pale);
+    border: 1px solid var(--amber);
+    color: #7A5000;
+    display: block;
+  }
+  .feedback-box.correct {
+    background: #EBF7F3;
+    border: 1px solid var(--teal);
+    color: #1A5C44;
+    display: block;
+  }
+  .feedback-box.incorrect {
+    background: #FDECEA;
+    border: 1px solid var(--red);
+    color: #7A1A10;
+    display: block;
+  }
+
+  .scenario-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .attempts-left {
+    font-size: 0.82rem;
+    color: var(--text-light);
+    font-style: italic;
+  }
+
+  /* ===== SLIDER SCREEN ===== */
+  #screen-slider { background: var(--cream); }
+
+  .slider-intro {
+    background: var(--white);
+    border-radius: 18px;
+    padding: 22px 24px;
+    margin-bottom: 22px;
+    box-shadow: 0 4px 16px var(--shadow);
+    border-left: 5px solid var(--amber);
+  }
+  .slider-intro h3 {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--blue);
+    margin-bottom: 8px;
+  }
+  .slider-intro p {
+    font-size: 0.92rem;
+    color: var(--text-mid);
+    line-height: 1.6;
+  }
+  .slider-intro .car-specs {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .spec-chip {
+    background: var(--blue);
+    color: #fff;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  .slider-panel {
+    background: var(--white);
+    border-radius: 18px;
+    padding: 26px 24px;
+    box-shadow: 0 6px 24px var(--shadow);
+    margin-bottom: 22px;
+  }
+  .slider-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .slider-label-row label {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .slider-value-display {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--amber);
+  }
+  .slider-value-display span { font-size: 0.85rem; color: var(--text-light); font-weight: normal; }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--cream-dark);
+    outline: none;
+    margin: 8px 0 16px;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--amber);
+    cursor: pointer;
+    border: 3px solid var(--white);
+    box-shadow: 0 2px 8px var(--shadow-warm);
+    transition: transform 0.15s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+  input[type=range]::-moz-range-thumb {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--amber);
+    cursor: pointer;
+    border: 3px solid var(--white);
+    box-shadow: 0 2px 8px var(--shadow-warm);
+  }
+  input[type=range]:focus { outline: 3px solid var(--amber); outline-offset: 3px; border-radius: 4px; }
+
+  .slider-endpoints {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--text-light);
+    margin-top: -10px;
+    margin-bottom: 10px;
+  }
+
+  /* ===== LIVE GRAPH ===== */
+  .graph-section {
+    margin-top: 8px;
+  }
+  .graph-title {
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-light);
+    margin-bottom: 14px;
+  }
+  .bars-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: end;
+    height: 220px;
+  }
+  .bar-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-end;
+  }
+  .bar-value {
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin-bottom: 6px;
+    transition: color 0.3s;
+  }
+  .bar-outer {
+    width: 100%;
+    background: var(--cream-dark);
+    border-radius: 8px 8px 0 0;
+    height: 160px;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+    position: relative;
+  }
+  .bar-fill {
+    width: 100%;
+    border-radius: 8px 8px 0 0;
+    transition: height 0.45s cubic-bezier(0.34, 1.2, 0.64, 1);
+    position: relative;
+  }
+  .bar-fill.monthly { background: linear-gradient(180deg, var(--blue-light) 0%, var(--blue) 100%); }
+  .bar-fill.interest { background: linear-gradient(180deg, var(--amber-light) 0%, var(--amber) 100%); }
+  .bar-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-align: center;
+    margin-top: 8px;
+    color: var(--text-mid);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .bar-sublabel {
+    font-size: 0.7rem;
+    color: var(--text-light);
+    text-align: center;
+    margin-top: 2px;
+  }
+
+  .graph-insight {
+    background: var(--amber-pale);
+    border: 1px solid var(--amber);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-top: 16px;
+    font-size: 0.88rem;
+    color: #7A5000;
+    line-height: 1.55;
+    transition: opacity 0.3s;
+  }
+  .graph-insight strong { display: block; margin-bottom: 4px; }
+
+  /* evaluate question after slider */
+  .evaluate-card {
+    background: var(--white);
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 4px 16px var(--shadow);
+    margin-top: 22px;
+    border-top: 4px solid var(--blue);
+  }
+  .evaluate-label {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 8px;
+  }
+  .evaluate-question {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    line-height: 1.55;
+    margin-bottom: 16px;
+  }
+
+  /* ===== REFLECTION ===== */
+  #screen-reflection { background: var(--cream); }
+
+  .reflection-wrap {
+    background: var(--white);
+    border-radius: 18px;
+    padding: 32px;
+    box-shadow: 0 6px 24px var(--shadow);
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .reflection-wrap h2 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--blue);
+    margin-bottom: 8px;
+  }
+  .reflection-wrap p {
+    font-size: 0.95rem;
+    color: var(--text-mid);
+    line-height: 1.65;
+    margin-bottom: 18px;
+  }
+  .reflection-prompt-box {
+    background: var(--amber-pale);
+    border-left: 4px solid var(--amber);
+    padding: 14px 18px;
+    border-radius: 0 10px 10px 0;
+    margin-bottom: 18px;
+    font-size: 0.95rem;
+    color: #7A5000;
+    font-style: italic;
+    line-height: 1.6;
+  }
+  .reflection-wrap textarea {
+    width: 100%;
+    height: 120px;
+    padding: 14px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+    background: var(--cream);
+    resize: vertical;
+    line-height: 1.6;
+    margin-bottom: 8px;
+    transition: border-color 0.2s;
+  }
+  .reflection-wrap textarea:focus {
+    outline: 3px solid var(--amber);
+    outline-offset: 2px;
+    border-color: var(--blue);
+  }
+  .char-count {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-bottom: 16px;
+    text-align: right;
+  }
+  .char-count.met { color: var(--teal); font-weight: bold; }
+
+  /* ===== RESULTS ===== */
+  #screen-results { background: var(--cream); }
+
+  .results-hero {
+    background: linear-gradient(135deg, var(--asphalt) 0%, var(--blue-dark) 100%);
+    color: #fff;
+    padding: 44px 28px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .results-hero::before {
+    content: '🏁';
+    font-size: 6rem;
+    position: absolute;
+    right: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.12;
+  }
+  .results-hero .finish-icon { font-size: 2.5rem; margin-bottom: 8px; display: block; }
+  .results-hero h2 {
+    font-size: 1.2rem;
+    font-weight: 400;
+    opacity: 0.8;
+    margin-bottom: 4px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .score-big {
+    font-size: 4.5rem;
+    font-weight: 800;
+    color: var(--amber);
+    line-height: 1;
+    margin: 8px 0 4px;
+  }
+  .score-sub { font-size: 0.95rem; opacity: 0.7; }
+
+  .results-content {
+    max-width: 600px;
+    margin: 28px auto;
+    padding: 0 20px;
+  }
+  .results-card {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 4px 16px var(--shadow);
+    margin-bottom: 18px;
+  }
+  .results-card h3 {
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-light);
+    margin-bottom: 14px;
+  }
+  .breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--cream-dark);
+    font-size: 0.9rem;
+  }
+  .breakdown-row:last-child { border-bottom: none; }
+  .breakdown-label { color: var(--text-mid); }
+  .breakdown-score { font-weight: 800; color: var(--blue); }
+
+  .badge-card {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+    box-shadow: 0 4px 16px var(--shadow);
+    margin-bottom: 18px;
+  }
+  .badge-ring {
+    width: 130px;
+    height: 130px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--asphalt) 0%, var(--blue-dark) 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 28px var(--shadow);
+    border: 4px solid var(--amber);
+    transition: filter 0.3s;
+  }
+  .badge-ring.locked { filter: grayscale(100%); opacity: 0.45; }
+  .badge-ring .badge-icon { font-size: 2.8rem; }
+  .badge-ring .badge-name {
+    font-size: 0.58rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-top: 4px;
+  }
+  .badge-title-text {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--blue);
+    margin-bottom: 4px;
+  }
+  .badge-tagline { font-size: 0.9rem; color: var(--text-light); font-style: italic; margin-bottom: 18px; }
+
+  .download-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+  .replay-row {
+    text-align: center;
+  }
+  .replay-row button {
+    background: none;
+    border: none;
+    color: var(--blue);
+    font-family: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 4px 8px;
+  }
+  .replay-row button:focus { outline: 3px solid var(--amber); outline-offset: 2px; }
+
+  /* ===== LIVE REGION ===== */
+  #live-region { position: absolute; left: -9999px; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 520px) {
+    .bars-wrap { height: 180px; gap: 10px; }
+    .bar-outer { height: 130px; }
+    .bar-value { font-size: 0.9rem; }
+    .intro-wrap h2 { font-size: 1.7rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  .screen { animation: slideUp 0.35s ease; }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<div id="live-region" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+
+<!-- ==================== INTRO ==================== -->
+<div id="screen-intro" class="screen active" role="main">
+  <div class="game-header">
+    <div class="header-title">
+      <span class="car-icon" aria-hidden="true">🚗</span>
+      <h1>The Road Test</h1>
+    </div>
+    <span class="header-badge">Concept Game Showcase</span>
+  </div>
+  <main id="main-content">
+    <div class="intro-wrap">
+      <span class="car-hero" aria-hidden="true">🚗</span>
+      <h2>You are about to buy a <span>car.</span></h2>
+      <p>Everyone has to do it eventually. The decisions you make in the next 10 minutes are the same ones that cost real buyers thousands of extra dollars. Make smart choices, run the numbers, and earn your badge.</p>
+      <div class="intro-chips">
+        <span class="chip">3 Decision Scenarios</span>
+        <span class="chip">Live Payment Calculator</span>
+        <span class="chip amber">Badge at 85%</span>
+        <span class="chip">Reflection Card</span>
+      </div>
+      <div class="name-form">
+        <label for="player-name">Your name (goes on your reflection card)</label>
+        <input type="text" id="player-name" placeholder="Enter your name..." autocomplete="given-name" maxlength="50">
+        <button class="btn-go" onclick="startGame()" style="width:100%;">Let's Drive &rarr;</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ==================== SCENARIO 1 ==================== -->
+<div id="screen-s1" class="screen scenario-screen" role="main" aria-labelledby="s1-title">
+  <div class="game-header">
+    <div class="header-title">
+      <span class="car-icon" aria-hidden="true">🚗</span>
+      <h1>The Road Test</h1>
+    </div>
+    <span class="header-badge" id="s1-badge">Stop 1 of 5</span>
+  </div>
+  <div class="road-progress" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" aria-label="Journey progress: Stop 1 of 5">
+    <div class="road-track">
+      <div class="road-fill" id="road-fill-s1" style="width:20%"></div>
+      <div class="road-car" id="road-car-s1" style="left:20%">🚗</div>
+    </div>
+    <div class="road-stops">
+      <span class="road-stop reached">Start</span>
+      <span class="road-stop">Down Payment</span>
+      <span class="road-stop">Loan Terms</span>
+      <span class="road-stop">Hidden Costs</span>
+      <span class="road-stop">Calculator</span>
+      <span class="road-stop">Finish</span>
+    </div>
+  </div>
+  <main>
+    <div class="scenario-header">
+      <div class="stop-label">Stop 1 of 5: Down Payment</div>
+      <h2 class="scenario-title" id="s1-title">How Much Should You Put Down?</h2>
+    </div>
+    <div class="scenario-card">
+      <div class="scenario-card-top">
+        <span class="scenario-icon" aria-hidden="true">💰</span>
+        <div class="scenario-situation">
+          <span class="scenario-reveal-line" id="s1-line1">You found the car you want: a 2022 sedan, priced at $25,000.</span>
+          <span class="scenario-reveal-line" id="s1-line2">The dealer says you only need $500 down to drive it off the lot today.</span>
+          <span class="scenario-reveal-line" id="s1-line3">Your savings account has $4,000 in it. You could put down $2,500 instead.</span>
+        </div>
+      </div>
+      <div class="scenario-card-bottom">
+        <p class="scenario-question">Which down payment decision puts you in a better financial position?</p>
+        <div class="answer-options" id="s1-options" role="group" aria-label="Answer choices">
+          <button class="answer-btn" onclick="selectAnswer('s1',0)" data-index="0">
+            <span class="ans-letter" aria-hidden="true">A</span>
+            <span>Put down $500. Keep your savings intact for emergencies and invest the difference.</span>
+          </button>
+          <button class="answer-btn" onclick="selectAnswer('s1',1)" data-index="1">
+            <span class="ans-letter" aria-hidden="true">B</span>
+            <span>Put down $2,500. You borrow less, pay less interest, and lower your monthly payment.</span>
+          </button>
+          <button class="answer-btn" onclick="selectAnswer('s1',2)" data-index="2">
+            <span class="ans-letter" aria-hidden="true">C</span>
+            <span>Put down the full $4,000. Always maximize the down payment to reduce debt.</span>
+          </button>
+        </div>
+        <div class="feedback-box" id="s1-feedback" role="alert"></div>
+      </div>
+    </div>
+    <div class="scenario-nav">
+      <span class="attempts-left" id="s1-attempts" aria-live="polite">2 attempts remaining</span>
+      <button class="btn-blue" id="s1-next" onclick="goToS2()" disabled>Next Stop &rarr;</button>
+    </div>
+  </main>
+</div>
+
+<!-- ==================== SCENARIO 2 ==================== -->
+<div id="screen-s2" class="screen scenario-screen" role="main" aria-labelledby="s2-title">
+  <div class="game-header">
+    <div class="header-title">
+      <span class="car-icon" aria-hidden="true">🚗</span>
+      <h1>The Road Test</h1>
+    </div>
+    <span class="header-badge">Stop 2 of 5</span>
+  </div>
+  <div class="road-progress" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" aria-label="Journey progress: Stop 2 of 5">
+    <div class="road-track">
+      <div class="road-fill" style="width:40%"></div>
+      <div class="road-car" style="left:40%">🚗</div>
+    </div>
+    <div class="road-stops">
+      <span class="road-stop reached">Start</span>
+      <span class="road-stop reached">Down Payment</span>
+      <span class="road-stop">Loan Terms</span>
+      <span class="road-stop">Hidden Costs</span>
+      <span class="road-stop">Calculator</span>
+      <span class="road-stop">Finish</span>
+    </div>
+  </div>
+  <main>
+    <div class="scenario-header">
+      <div class="stop-label">Stop 2 of 5: Loan Terms</div>
+      <h2 class="scenario-title" id="s2-title">Shorter or Longer Loan?</h2>
+    </div>
+    <div class="scenario-card">
+      <div class="scenario-card-top">
+        <span class="scenario-icon" aria-hidden="true">📋</span>
+        <div class="scenario-situation">
+          <span class="scenario-reveal-line visible" id="s2-line1">You put down $2,500, leaving $22,500 to finance at 7.9% APR.</span>
+          <span class="scenario-reveal-line visible" id="s2-line2">The finance manager offers two options: 48 months or 72 months.</span>
+          <span class="scenario-reveal-line visible" id="s2-line3">The 72-month loan has a lower monthly payment. The 48-month loan costs more each month.</span>
+        </div>
+      </div>
+      <div class="scenario-card-bottom">
+        <p class="scenario-question">A friend says: "Always take the longer loan. Lower payments mean more cash in your pocket." Is your friend right?</p>
+        <div class="answer-options" id="s2-options" role="group" aria-label="Answer choices">
+          <button class="answer-btn" onclick="selectAnswer('s2',0)" data-index="0">
+            <span class="ans-letter" aria-hidden="true">A</span>
+            <span>Yes. Lower monthly payments free up cash flow, which is always the smarter move.</span>
+          </button>
+          <button class="answer-btn" onclick="selectAnswer('s2',1)" data-index="1">
+            <span class="ans-letter" aria-hidden="true">B</span>
+            <span>No. The longer loan means more months of interest. You pay less per month but more overall.</span>
+          </button>
+          <button class="answer-btn" onclick="selectAnswer('s2',2)" data-index="2">
+            <span class="ans-letter" aria-hidden="true">C</span>
+            <span>It depends entirely on the interest rate. At 7.9% the difference is negligible.</span>
+          </button>
+        </div>
+        <div class="feedback-box" id="s2-feedback" role="alert"></div>
+      </div>
+    </div>
+    <div class="scenario-nav">
+      <span class="attempts-left" id="s2-attempts" aria-live="polite">2 attempts remaining</span>
+      <button class="btn-blue" id="s2-next" onclick="goToS3()" disabled>Next Stop &rarr;</button>
+    </div>
+  </main>
+</div>
+
+<!-- ==================== SCENARIO 3 ==================== -->
+<div id="screen-s3" class="screen scenario-screen" role="main" aria-labelledby="s3-title">
+  <div class="game-header">
+    <div class="header-title">
+      <span class="car-icon" aria-hidden="true">🚗</span>
+      <h1>The Road Test</h1>
+    </div>
+    <span class="header-badge">Stop 3 of 5</span>
+  </div>
+  <div class="road-progress" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" aria-label="Journey progress: Stop 3 of 5">
+    <div class="road-track">
+      <div class="road-fill" style="width:60%"></div>
+      <div class="road-car" style="left:60%">🚗</div>
+    </div>
+    <div class="road-stops">
+      <span class="road-stop reached">Start</span>
+      <span class="road-stop reached">Down Payment</span>
+      <span class="road-stop reached">Loan Terms</span>
+      <span class="road-stop">Hidden Costs</span>
+      <span class="road-stop">Calculator</span>
+      <span class="road-stop">Finish</span>
+    </div>
+  </div>
+  <main>
+    <div class="scenario-header">
+      <div class="stop-label">Stop 3 of 5: Hidden Costs</div>
+      <h2 class="scenario-title" id="s3-title">What Did the Sticker Price Leave Out?</h2>
+    </div>
+    <div class="scenario-card">
+      <div class="scenario-card-top">
+        <span class="scenario-icon" aria-hidden="true">🔍</span>
+        <div class="scenario-situation">
+          <span class="scenario-reveal-line visible">You are about to sign.</span>
+          <span class="scenario-reveal-line visible">The monthly payment looks manageable. The down payment is covered.</span>
+          <span class="scenario-reveal-line visible">But the true monthly cost of owning this car is higher than the loan payment alone.</span>
+        </div>
+      </div>
+      <div class="scenario-card-bottom">
+        <p class="scenario-question">Which of the following is most commonly underestimated by first-time car buyers?</p>
+        <div class="answer-options" id="s3-options" role="group" aria-label="Answer choices">
+          <button class="answer-btn" onclick="selectAnswer('s3',0)" data-index="0">
+            <span class="ans-letter" aria-hidden="true">A</span>
+            <span>The cost of gasoline over the life of the loan</span>
+          </button>
+          <button class="answer-btn" onclick="selectAnswer('s3',1)" data-index="1">
+            <span class="ans-letter" aria-hidden="true">B</span>
+            <span>Insurance, registration, maintenance, and depreciation added together</span>
+          </button>
+          <button class="answer-btn" onclick="selectAnswer('s3',2)" data-index="2">
+            <span class="ans-letter" aria-hidden="true">C</span>
+            <span>The dealer documentation and processing fees</span>
+          </button>
+        </div>
+        <div class="feedback-box" id="s3-feedback" role="alert"></div>
+      </div>
+    </div>
+    <div class="scenario-nav">
+      <span class="attempts-left" id="s3-attempts" aria-live="polite">2 attempts remaining</span>
+      <button class="btn-blue" id="s3-next" onclick="goToSlider()" disabled>Run the Numbers &rarr;</button>
+    </div>
+  </main>
+</div>
+
+<!-- ==================== SLIDER + GRAPH ==================== -->
+<div id="screen-slider" class="screen" role="main" aria-labelledby="slider-title">
+  <div class="game-header">
+    <div class="header-title">
+      <span class="car-icon" aria-hidden="true">🚗</span>
+      <h1>The Road Test</h1>
+    </div>
+    <span class="header-badge">Stop 4 of 5</span>
+  </div>
+  <div class="road-progress" role="progressbar" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100" aria-label="Journey progress: Stop 4 of 5">
+    <div class="road-track">
+      <div class="road-fill" style="width:80%"></div>
+      <div class="road-car" style="left:80%">🚗</div>
+    </div>
+    <div class="road-stops">
+      <span class="road-stop reached">Start</span>
+      <span class="road-stop reached">Down Payment</span>
+      <span class="road-stop reached">Loan Terms</span>
+      <span class="road-stop reached">Hidden Costs</span>
+      <span class="road-stop">Calculator</span>
+      <span class="road-stop">Finish</span>
+    </div>
+  </div>
+  <main>
+    <div class="stop-label">Stop 4 of 5: Run the Numbers</div>
+    <h2 class="scenario-title" id="slider-title" style="margin-bottom:18px;">Move the Slider. Watch the Numbers.</h2>
+
+    <div class="slider-intro">
+      <h3>Your loan details</h3>
+      <p>You financed $22,500 at 7.9% APR. Drag the slider to change the loan term and watch what happens to your monthly payment and total interest paid. These are real amortization calculations.</p>
+      <div class="car-specs">
+        <span class="spec-chip">Loan: $22,500</span>
+        <span class="spec-chip">Rate: 7.9% APR</span>
+      </div>
+    </div>
+
+    <div class="slider-panel">
+      <div class="slider-label-row">
+        <label for="term-slider">Loan Term</label>
+        <div class="slider-value-display" id="term-display">48 <span>months</span></div>
+      </div>
+      <input type="range" id="term-slider" min="24" max="72" step="6" value="48"
+             aria-label="Loan term in months" aria-valuemin="24" aria-valuemax="72" aria-valuenow="48"
+             oninput="updateGraph(this.value)">
+      <div class="slider-endpoints">
+        <span>24 months</span>
+        <span>72 months</span>
+      </div>
+
+      <div class="graph-section" role="region" aria-label="Live payment comparison chart" aria-live="polite">
+        <div class="graph-title">Payment Comparison</div>
+        <div class="bars-wrap" aria-hidden="true">
+          <div class="bar-col">
+            <div class="bar-value" id="monthly-value" style="color:var(--blue);">$--</div>
+            <div class="bar-outer">
+              <div class="bar-fill monthly" id="monthly-bar" style="height:60%"></div>
+            </div>
+            <div class="bar-label">Monthly Payment</div>
+            <div class="bar-sublabel">per month</div>
+          </div>
+          <div class="bar-col">
+            <div class="bar-value" id="interest-value" style="color:var(--amber);">$--</div>
+            <div class="bar-outer">
+              <div class="bar-fill interest" id="interest-bar" style="height:40%"></div>
+            </div>
+            <div class="bar-label">Total Interest</div>
+            <div class="bar-sublabel">over full term</div>
+          </div>
+        </div>
+        <div class="sr-only" id="graph-sr-text"></div>
+        <div class="graph-insight" id="graph-insight">
+          <strong>Notice something?</strong>
+          Move the slider left and right. Watch both bars.
+        </div>
+      </div>
+    </div>
+
+    <!-- Evaluate question -->
+    <div class="evaluate-card">
+      <div class="evaluate-label">Evaluate This</div>
+      <p class="evaluate-question">A buyer says: "I picked the 72-month loan because the monthly payment fits my budget." What is the most important thing this person may not have considered?</p>
+      <div class="answer-options" id="eval-options" role="group" aria-label="Answer choices">
+        <button class="answer-btn" onclick="selectEval(0)" data-index="0">
+          <span class="ans-letter" aria-hidden="true">A</span>
+          <span>Whether the car will still run reliably at the end of 72 months</span>
+        </button>
+        <button class="answer-btn" onclick="selectEval(1)" data-index="1">
+          <span class="ans-letter" aria-hidden="true">B</span>
+          <span>The total interest paid over 72 months compared to a shorter term</span>
+        </button>
+        <button class="answer-btn" onclick="selectEval(2)" data-index="2">
+          <span class="ans-letter" aria-hidden="true">C</span>
+          <span>Whether the dealer offers a prepayment penalty on long-term loans</span>
+        </button>
+      </div>
+      <div class="feedback-box" id="eval-feedback" role="alert"></div>
+      <div class="scenario-nav" style="margin-top:16px;">
+        <span class="attempts-left" id="eval-attempts" aria-live="polite">2 attempts remaining</span>
+        <button class="btn-blue" id="eval-next" onclick="goToReflection()" disabled>Almost There &rarr;</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ==================== REFLECTION ==================== -->
+<div id="screen-reflection" class="screen" role="main" aria-labelledby="reflection-heading">
+  <div class="game-header">
+    <div class="header-title">
+      <span class="car-icon" aria-hidden="true">🚗</span>
+      <h1>The Road Test</h1>
+    </div>
+    <span class="header-badge">Pit Stop</span>
+  </div>
+  <div class="road-progress" role="progressbar" aria-valuenow="92" aria-valuemin="0" aria-valuemax="100" aria-label="Journey progress: almost there">
+    <div class="road-track">
+      <div class="road-fill" style="width:92%"></div>
+      <div class="road-car" style="left:92%">🚗</div>
+    </div>
+    <div class="road-stops">
+      <span class="road-stop reached">Start</span>
+      <span class="road-stop reached">Down Payment</span>
+      <span class="road-stop reached">Loan Terms</span>
+      <span class="road-stop reached">Hidden Costs</span>
+      <span class="road-stop reached">Calculator</span>
+      <span class="road-stop">Finish</span>
+    </div>
+  </div>
+  <main>
+    <div class="reflection-wrap">
+      <h2 id="reflection-heading">One More Stop</h2>
+      <p>Before you see your score, take a moment. This is not graded. It is for you. Your response will appear on your downloadable reflection card.</p>
+      <div class="reflection-prompt-box">
+        Think about a financial decision you have made or will soon make. After running these numbers, what is one thing you would look at differently before signing anything?
+      </div>
+      <label for="reflection-text" class="sr-only">Your reflection response</label>
+      <textarea id="reflection-text" placeholder="Type your reflection here..." aria-describedby="char-count-display" oninput="checkReflection()"></textarea>
+      <div class="char-count" id="char-count-display">Minimum 20 characters. You have typed <span id="char-count">0</span>.</div>
+      <button class="btn-go" id="reflection-submit-btn" onclick="goToResults()" disabled style="width:100%;">See My Results &rarr;</button>
+    </div>
+  </main>
+</div>
+
+<!-- ==================== RESULTS ==================== -->
+<div id="screen-results" class="screen" role="main" aria-labelledby="results-heading">
+  <div class="game-header">
+    <div class="header-title">
+      <span class="car-icon" aria-hidden="true">🚗</span>
+      <h1>The Road Test</h1>
+    </div>
+    <span class="header-badge">Finish Line</span>
+  </div>
+  <div class="road-progress" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="Journey complete">
+    <div class="road-track">
+      <div class="road-fill" style="width:100%"></div>
+      <div class="road-car" style="left:97%">🏁</div>
+    </div>
+    <div class="road-stops">
+      <span class="road-stop reached">Start</span>
+      <span class="road-stop reached">Down Payment</span>
+      <span class="road-stop reached">Loan Terms</span>
+      <span class="road-stop reached">Hidden Costs</span>
+      <span class="road-stop reached">Calculator</span>
+      <span class="road-stop reached">Finish</span>
+    </div>
+  </div>
+
+  <div class="results-hero">
+    <span class="finish-icon" aria-hidden="true">🏁</span>
+    <h2 id="results-heading">You crossed the finish line</h2>
+    <div class="score-big" id="score-big" aria-live="polite">--</div>
+    <p class="score-sub" id="score-sub">Calculating...</p>
+  </div>
+
+  <div class="results-content">
+    <div class="results-card">
+      <h3>Score Breakdown</h3>
+      <div class="breakdown-row">
+        <span class="breakdown-label">Scenario Questions (3)</span>
+        <span class="breakdown-score" id="scenario-score-display">--</span>
+      </div>
+      <div class="breakdown-row">
+        <span class="breakdown-label">Evaluate Question</span>
+        <span class="breakdown-score" id="eval-score-display">--</span>
+      </div>
+      <div class="breakdown-row" style="border-top:2px solid var(--border); padding-top:10px; margin-top:4px;">
+        <span class="breakdown-label" style="font-weight:800;">Total</span>
+        <span class="breakdown-score" id="total-score-display" style="font-size:1.1rem;">--</span>
+      </div>
+    </div>
+
+    <div class="badge-card">
+      <div class="badge-ring" id="badge-ring">
+        <span class="badge-icon" aria-hidden="true">🏎️</span>
+        <span class="badge-name">Road Warrior</span>
+      </div>
+      <p class="badge-title-text" id="badge-title-text">Badge Status</p>
+      <p class="badge-tagline">"You ran the numbers before you signed."</p>
+    </div>
+
+    <div class="download-row">
+      <button class="btn-teal" onclick="downloadReflectionCard()">Download Reflection Card</button>
+      <button class="btn-go" id="badge-download-btn" onclick="downloadBadge()" style="display:none;">Download Badge</button>
+    </div>
+
+    <div class="replay-row">
+      <button onclick="replayGame()">Take another lap</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="offscreen-canvas" style="display:none;" aria-hidden="true"></canvas>
+
+<script>
+// ==================== DATA ====================
+
+const LOAN_AMOUNT = 22500;
+const APR = 0.079;
+
+const SCENARIOS = {
+  s1: {
+    correct: 1,
+    hint: "Think about what happens on both sides: how much you borrow, and what that means for interest. But also what you keep.",
+    explanation: "Putting down $2,500 strikes the right balance. You lower the loan amount and total interest paid, while keeping $1,500 in savings for emergencies. Putting down $500 leaves you borrowing more and paying more interest. Putting down all $4,000 leaves no financial cushion, which is risky if something unexpected comes up."
+  },
+  s2: {
+    correct: 1,
+    hint: "The monthly payment goes down, but how long are you paying it? What does that mean for total interest?",
+    explanation: "Your friend is only looking at one number. A longer term means more months of interest accruing on the balance. The 72-month loan will cost you significantly more in total interest than the 48-month loan, even though each payment is smaller. Lower monthly payment does not mean lower total cost."
+  },
+  s3: {
+    correct: 1,
+    hint: "Gas prices are visible and vary. Documentation fees are one-time. Think about what repeats every month and also loses value over time.",
+    explanation: "Most first-time buyers budget for the loan payment and gas, but underestimate the combined weight of insurance (often $100-200 per month), annual registration, routine maintenance, and depreciation. A car that cost $25,000 today may be worth $14,000 in three years. These costs are real whether or not you think about them."
+  }
+};
+
+const EVAL_Q = {
+  correct: 1,
+  hint: "The monthly payment fits the budget, yes. But fitting the budget is not the same as the best financial outcome. What else did the calculator just show you?",
+  explanation: "Fitting a monthly payment into your budget is necessary but not sufficient. The buyer has not compared total interest paid across different terms. A 72-month loan at 7.9% can add thousands in interest compared to a 48-month loan on the same amount. The question is not just 'can I afford this payment' but 'what is this decision actually costing me overall.'"
+};
+
+// ==================== STATE ====================
+let playerName = '';
+let attempts = { s1: 2, s2: 2, s3: 2, eval: 2 };
+let scores = { s1: 0, s2: 0, s3: 0, eval: 0 };
+let reflectionText = '';
+let sliderInteracted = false;
+
+// ==================== HELPERS ====================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+    s.style.display = 'none';
+  });
+  const el = document.getElementById(id);
+  el.classList.add('active');
+  el.style.display = 'flex';
+  window.scrollTo(0, 0);
+}
+
+function announce(msg) {
+  const r = document.getElementById('live-region');
+  r.textContent = '';
+  setTimeout(() => r.textContent = msg, 60);
+}
+
+function fmt(n) {
+  return '$' + Math.round(n).toLocaleString();
+}
+
+// ==================== AMORTIZATION ====================
+function calcLoan(principal, annualRate, months) {
+  const r = annualRate / 12;
+  if (r === 0) return { monthly: principal / months, totalInterest: 0 };
+  const monthly = principal * (r * Math.pow(1 + r, months)) / (Math.pow(1 + r, months) - 1);
+  const totalInterest = (monthly * months) - principal;
+  return { monthly, totalInterest };
+}
+
+// ==================== INTRO ====================
+function startGame() {
+  const input = document.getElementById('player-name').value.trim();
+  playerName = input || 'Player';
+  showScreen('screen-s1');
+  // Reveal lines with stagger
+  setTimeout(() => document.getElementById('s1-line1').classList.add('visible'), 200);
+  setTimeout(() => document.getElementById('s1-line2').classList.add('visible'), 600);
+  setTimeout(() => document.getElementById('s1-line3').classList.add('visible'), 1000);
+}
+
+// ==================== ANSWER SELECTION ====================
+function selectAnswer(sceneId, index) {
+  const data = SCENARIOS[sceneId];
+  const optionsEl = document.getElementById(sceneId + '-options');
+  const buttons = optionsEl.querySelectorAll('.answer-btn');
+  const fb = document.getElementById(sceneId + '-feedback');
+  const nextBtn = document.getElementById(sceneId + '-next');
+  const attEl = document.getElementById(sceneId + '-attempts');
+
+  buttons.forEach(b => b.disabled = true);
+
+  if (index === data.correct) {
+    buttons[index].classList.add('correct');
+    const pts = attempts[sceneId] === 2 ? 2 : 1;
+    scores[sceneId] = pts;
+    fb.className = 'feedback-box correct';
+    fb.innerHTML = '<strong>Correct!</strong> ' + data.explanation;
+    nextBtn.disabled = false;
+    announce('Correct! ' + pts + ' point' + (pts !== 1 ? 's' : '') + '.');
+  } else {
+    buttons[index].classList.add('incorrect');
+    attempts[sceneId]--;
+    if (attempts[sceneId] > 0) {
+      buttons.forEach((b, i) => { if (i !== index) b.disabled = false; });
+      fb.className = 'feedback-box hint';
+      fb.innerHTML = '<strong>Not quite.</strong> ' + data.hint;
+      const attNow = attempts[sceneId];
+      attEl.textContent = attNow + ' attempt' + (attNow === 1 ? '' : 's') + ' remaining';
+      announce('Incorrect. ' + data.hint);
+    } else {
+      buttons[data.correct].classList.add('correct');
+      fb.className = 'feedback-box incorrect';
+      fb.innerHTML = '<strong>The correct answer is ' + String.fromCharCode(65 + data.correct) + '.</strong> ' + data.explanation;
+      nextBtn.disabled = false;
+      attEl.textContent = 'No attempts remaining';
+      announce('The correct answer was ' + String.fromCharCode(65 + data.correct) + '.');
+    }
+  }
+}
+
+function selectEval(index) {
+  const buttons = document.getElementById('eval-options').querySelectorAll('.answer-btn');
+  const fb = document.getElementById('eval-feedback');
+  const nextBtn = document.getElementById('eval-next');
+  const attEl = document.getElementById('eval-attempts');
+
+  buttons.forEach(b => b.disabled = true);
+
+  if (index === EVAL_Q.correct) {
+    buttons[index].classList.add('correct');
+    const pts = attempts.eval === 2 ? 2 : 1;
+    scores.eval = pts;
+    fb.className = 'feedback-box correct';
+    fb.innerHTML = '<strong>Correct!</strong> ' + EVAL_Q.explanation;
+    nextBtn.disabled = false;
+    announce('Correct! ' + pts + ' point' + (pts !== 1 ? 's' : '') + '.');
+  } else {
+    buttons[index].classList.add('incorrect');
+    attempts.eval--;
+    if (attempts.eval > 0) {
+      buttons.forEach((b, i) => { if (i !== index) b.disabled = false; });
+      fb.className = 'feedback-box hint';
+      fb.innerHTML = '<strong>Not quite.</strong> ' + EVAL_Q.hint;
+      const attNow = attempts.eval;
+      attEl.textContent = attNow + ' attempt' + (attNow === 1 ? '' : 's') + ' remaining';
+      announce('Incorrect. ' + EVAL_Q.hint);
+    } else {
+      buttons[EVAL_Q.correct].classList.add('correct');
+      fb.className = 'feedback-box incorrect';
+      fb.innerHTML = '<strong>The correct answer is ' + String.fromCharCode(65 + EVAL_Q.correct) + '.</strong> ' + EVAL_Q.explanation;
+      nextBtn.disabled = false;
+      attEl.textContent = 'No attempts remaining';
+      announce('The correct answer was ' + String.fromCharCode(65 + EVAL_Q.correct) + '.');
+    }
+  }
+}
+
+// ==================== NAVIGATION ====================
+function goToS2() { showScreen('screen-s2'); }
+function goToS3() { showScreen('screen-s3'); }
+function goToSlider() {
+  showScreen('screen-slider');
+  updateGraph(48);
+}
+function goToReflection() { showScreen('screen-reflection'); }
+
+// ==================== GRAPH ====================
+// Pre-calculate range for bar scaling
+const MIN_MONTHS = 24, MAX_MONTHS = 72;
+const calcMin = calcLoan(LOAN_AMOUNT, APR, MIN_MONTHS);
+const calcMax = calcLoan(LOAN_AMOUNT, APR, MAX_MONTHS);
+const maxMonthly = calcMin.monthly;   // highest monthly is shortest term
+const maxInterest = calcMax.totalInterest; // highest interest is longest term
+
+function updateGraph(months) {
+  months = parseInt(months);
+  const { monthly, totalInterest } = calcLoan(LOAN_AMOUNT, APR, months);
+
+  // Update display
+  document.getElementById('term-display').innerHTML = months + ' <span>months</span>';
+  document.getElementById('term-slider').setAttribute('aria-valuenow', months);
+
+  const monthlyEl = document.getElementById('monthly-value');
+  const interestEl = document.getElementById('interest-value');
+  monthlyEl.textContent = fmt(monthly);
+  interestEl.textContent = fmt(totalInterest);
+
+  // Bar heights as % of their respective maximums, min 6% for visibility
+  const monthlyPct = Math.max(6, (monthly / maxMonthly) * 100);
+  const interestPct = Math.max(6, (totalInterest / maxInterest) * 100);
+
+  document.getElementById('monthly-bar').style.height = monthlyPct + '%';
+  document.getElementById('interest-bar').style.height = interestPct + '%';
+
+  // Dynamic insight text
+  const insightEl = document.getElementById('graph-insight');
+  if (months <= 30) {
+    insightEl.innerHTML = '<strong>Short term.</strong> High monthly payment, but the least total interest. You own it outright sooner and pay ' + fmt(totalInterest) + ' in interest total.';
+  } else if (months <= 48) {
+    insightEl.innerHTML = '<strong>Balanced range.</strong> ' + fmt(monthly) + ' per month and ' + fmt(totalInterest) + ' in total interest. Many buyers land here.';
+  } else if (months <= 60) {
+    insightEl.innerHTML = '<strong>Lower payment, higher total cost.</strong> You pay ' + fmt(monthly) + ' per month, but ' + fmt(totalInterest) + ' in interest over the life of the loan.';
+  } else {
+    insightEl.innerHTML = '<strong>Lowest payment, highest total cost.</strong> ' + fmt(monthly) + ' per month feels manageable, but you pay ' + fmt(totalInterest) + ' in interest. The car may depreciate faster than you pay it off.';
+  }
+
+  // SR text update
+  document.getElementById('graph-sr-text').textContent =
+    months + ' month loan: monthly payment ' + fmt(monthly) + ', total interest ' + fmt(totalInterest);
+
+  sliderInteracted = true;
+}
+
+// ==================== REFLECTION ====================
+function checkReflection() {
+  const text = document.getElementById('reflection-text').value;
+  const len = text.length;
+  document.getElementById('char-count').textContent = len;
+  const wrap = document.getElementById('char-count-display');
+  const btn = document.getElementById('reflection-submit-btn');
+  if (len >= 20) {
+    wrap.className = 'char-count met';
+    btn.disabled = false;
+  } else {
+    wrap.className = 'char-count';
+    btn.disabled = true;
+  }
+}
+
+// ==================== RESULTS ====================
+function goToResults() {
+  reflectionText = document.getElementById('reflection-text').value;
+
+  const scenarioTotal = scores.s1 + scores.s2 + scores.s3;
+  const scenarioMax = 6;
+  const evalMax = 2;
+  const total = scenarioTotal + scores.eval;
+  const maxTotal = scenarioMax + evalMax;
+  const pct = Math.round((total / maxTotal) * 100);
+
+  document.getElementById('score-big').textContent = pct + '%';
+  document.getElementById('score-sub').textContent = total + ' out of ' + maxTotal + ' points';
+  document.getElementById('scenario-score-display').textContent = scenarioTotal + ' / ' + scenarioMax;
+  document.getElementById('eval-score-display').textContent = scores.eval + ' / ' + evalMax;
+  document.getElementById('total-score-display').textContent = total + ' / ' + maxTotal + ' (' + pct + '%)';
+
+  const ringEl = document.getElementById('badge-ring');
+  const titleEl = document.getElementById('badge-title-text');
+  const badgeBtn = document.getElementById('badge-download-btn');
+
+  if (pct >= 75) {
+    ringEl.classList.remove('locked');
+    titleEl.textContent = 'Badge Earned!';
+    badgeBtn.style.display = 'inline-block';
+  } else {
+    ringEl.classList.add('locked');
+    titleEl.textContent = 'Not Yet Earned';
+    titleEl.insertAdjacentHTML('afterend', '<p style="font-size:0.85rem;color:var(--red);margin-bottom:12px;">Score 75% or higher to earn The Road Warrior badge. Take another lap!</p>');
+  }
+
+  showScreen('screen-results');
+}
+
+// ==================== DOWNLOAD: REFLECTION CARD ====================
+function downloadReflectionCard() {
+  const canvas = document.getElementById('offscreen-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = 700, H = 440;
+  canvas.width = W; canvas.height = H;
+
+  const scenarioTotal = scores.s1 + scores.s2 + scores.s3;
+  const total = scenarioTotal + scores.eval;
+  const pct = Math.round((total / 8) * 100);
+
+  // Background
+  ctx.fillStyle = '#FAF7F2';
+  ctx.fillRect(0, 0, W, H);
+
+  // Header
+  ctx.fillStyle = '#2D3748';
+  ctx.fillRect(0, 0, W, 82);
+  ctx.fillStyle = '#E8A020';
+  ctx.font = 'bold 22px Trebuchet MS, sans-serif';
+  ctx.fillText('THE ROAD TEST', 28, 36);
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.font = '13px Trebuchet MS, sans-serif';
+  ctx.fillText('Concept Game Showcase', 28, 60);
+
+  // Score badge
+  ctx.fillStyle = '#2E4A7A';
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(W - 148, 18, 120, 48, 24);
+  else ctx.rect(W - 148, 18, 120, 48);
+  ctx.fill();
+  ctx.fillStyle = '#E8A020';
+  ctx.font = 'bold 26px Trebuchet MS, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(pct + '%', W - 88, 50);
+  ctx.textAlign = 'left';
+
+  // Name
+  ctx.fillStyle = '#2E4A7A';
+  ctx.font = 'bold 17px Trebuchet MS, sans-serif';
+  ctx.fillText(playerName, 28, 114);
+  ctx.fillStyle = '#6B6B85';
+  ctx.font = '13px Trebuchet MS, sans-serif';
+  ctx.fillText(new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'}), 28, 134);
+
+  // Loan summary from last slider position
+  const months = parseInt(document.getElementById('term-slider').value);
+  const { monthly, totalInterest } = calcLoan(LOAN_AMOUNT, APR, months);
+  ctx.fillStyle = '#2D3748';
+  ctx.font = 'bold 12px Trebuchet MS, sans-serif';
+  ctx.fillText('LAST LOAN CALCULATION: ' + months + ' months | ' + fmt(monthly) + '/mo | ' + fmt(totalInterest) + ' total interest', 28, 158);
+
+  // Divider
+  ctx.strokeStyle = '#D8D0C4';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(28, 172); ctx.lineTo(W - 28, 172); ctx.stroke();
+
+  // Reflection label
+  ctx.fillStyle = '#E8A020';
+  ctx.font = 'bold 10px Trebuchet MS, sans-serif';
+  ctx.fillText('REFLECTION', 28, 192);
+
+  // Reflection text wrap
+  ctx.fillStyle = '#1A1A2E';
+  ctx.font = '13px Trebuchet MS, sans-serif';
+  const words = reflectionText.split(' ');
+  let line = '', y = 212;
+  for (let w of words) {
+    const test = line + (line ? ' ' : '') + w;
+    if (ctx.measureText(test).width > W - 56 && line) {
+      ctx.fillText(line, 28, y); line = w; y += 20;
+      if (y > H - 44) { ctx.fillText(line + '...', 28, y); line = ''; break; }
+    } else { line = test; }
+  }
+  if (line && y <= H - 44) ctx.fillText(line, 28, y);
+
+  // Footer
+  ctx.fillStyle = '#6B6B85';
+  ctx.font = '11px Trebuchet MS, sans-serif';
+  ctx.fillText('Concept Game Showcase | The Road Test', 28, H - 16);
+  if (pct >= 75) {
+    ctx.fillStyle = '#3A8C6E';
+    ctx.font = 'bold 11px Trebuchet MS, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('Road Warrior Badge Earned', W - 28, H - 16);
+    ctx.textAlign = 'left';
+  }
+
+  const link = document.createElement('a');
+  link.download = 'road_test_reflection_' + playerName.replace(/\s+/g, '_') + '.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+// ==================== DOWNLOAD: BADGE ====================
+function downloadBadge() {
+  const canvas = document.getElementById('offscreen-canvas');
+  const ctx = canvas.getContext('2d');
+  const S = 400;
+  canvas.width = S; canvas.height = S;
+  ctx.clearRect(0, 0, S, S);
+
+  // Outer circle
+  ctx.beginPath();
+  ctx.arc(S/2, S/2, 188, 0, Math.PI * 2);
+  ctx.fillStyle = '#2D3748';
+  ctx.fill();
+
+  // Amber ring
+  ctx.beginPath();
+  ctx.arc(S/2, S/2, 174, 0, Math.PI * 2);
+  ctx.strokeStyle = '#E8A020';
+  ctx.lineWidth = 7;
+  ctx.stroke();
+
+  // Road stripe accent
+  ctx.beginPath();
+  ctx.arc(S/2, S/2, 165, 0, Math.PI * 2);
+  ctx.fillStyle = '#1E3560';
+  ctx.fill();
+
+  // Small road dashes around inner edge
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2 - Math.PI / 2;
+    const x1 = S/2 + 148 * Math.cos(angle);
+    const y1 = S/2 + 148 * Math.sin(angle);
+    const x2 = S/2 + 160 * Math.cos(angle);
+    const y2 = S/2 + 160 * Math.sin(angle);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+    ctx.strokeStyle = 'rgba(232,160,32,0.4)';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  }
+
+  // Icon
+  ctx.font = '72px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🏎️', S/2, S/2 - 22);
+
+  // Title
+  ctx.fillStyle = '#E8A020';
+  ctx.font = 'bold 21px Trebuchet MS, sans-serif';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('THE ROAD WARRIOR', S/2, S/2 + 56);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  ctx.font = '12px Trebuchet MS, sans-serif';
+  ctx.fillText('You ran the numbers before you signed.', S/2, S/2 + 78);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.font = '11px Trebuchet MS, sans-serif';
+  ctx.fillText(playerName, S/2, S/2 + 98);
+
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+
+  const link = document.createElement('a');
+  link.download = 'road_warrior_badge_' + playerName.replace(/\s+/g, '_') + '.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+// ==================== REPLAY ====================
+function replayGame() {
+  // Reset state
+  attempts = { s1: 2, s2: 2, s3: 2, eval: 2 };
+  scores = { s1: 0, s2: 0, s3: 0, eval: 0 };
+  reflectionText = '';
+  sliderInteracted = false;
+
+  // Reset reflection
+  document.getElementById('reflection-text').value = '';
+  document.getElementById('char-count').textContent = '0';
+  document.getElementById('char-count-display').className = 'char-count';
+  document.getElementById('reflection-submit-btn').disabled = true;
+
+  // Reset all answer buttons and feedback boxes
+  ['s1','s2','s3'].forEach(id => {
+    const opts = document.getElementById(id + '-options');
+    opts.querySelectorAll('.answer-btn').forEach(b => {
+      b.disabled = false;
+      b.classList.remove('correct','incorrect');
+    });
+    const fb = document.getElementById(id + '-feedback');
+    fb.className = 'feedback-box';
+    fb.textContent = '';
+    document.getElementById(id + '-next').disabled = true;
+    document.getElementById(id + '-attempts').textContent = '2 attempts remaining';
+  });
+
+  // Reset eval
+  document.getElementById('eval-options').querySelectorAll('.answer-btn').forEach(b => {
+    b.disabled = false;
+    b.classList.remove('correct','incorrect');
+  });
+  document.getElementById('eval-feedback').className = 'feedback-box';
+  document.getElementById('eval-feedback').textContent = '';
+  document.getElementById('eval-next').disabled = true;
+  document.getElementById('eval-attempts').textContent = '2 attempts remaining';
+
+  // Reset slider
+  document.getElementById('term-slider').value = 48;
+  updateGraph(48);
+
+  // Remove any injected badge-not-earned message
+  const titleEl = document.getElementById('badge-title-text');
+  titleEl.textContent = 'Badge Status';
+  const errMsg = titleEl.nextElementSibling;
+  if (errMsg && errMsg.tagName === 'P' && errMsg.style.color) errMsg.remove();
+
+  document.getElementById('badge-download-btn').style.display = 'none';
+  document.getElementById('badge-ring').classList.remove('locked');
+
+  showScreen('screen-s1');
+
+  // Re-trigger reveal lines
+  ['s1-line1','s1-line2','s1-line3'].forEach(id => {
+    document.getElementById(id).classList.remove('visible');
+  });
+  setTimeout(() => document.getElementById('s1-line1').classList.add('visible'), 200);
+  setTimeout(() => document.getElementById('s1-line2').classList.add('visible'), 600);
+  setTimeout(() => document.getElementById('s1-line3').classList.add('visible'), 1000);
+}
+</script>
+</body>
+</html>

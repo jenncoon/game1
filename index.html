@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concept Game Showcase | Jennifer Coon</title>
+<meta name="description" content="See what a concept game feels like. Interactive learning games built with Claude AI as a coding assistant, by Jennifer Coon, CIA, CFE.">
+<style>
+  :root {
+    --asphalt: #1C2333;
+    --navy: #2E4A7A;
+    --navy-light: #3D5F9A;
+    --amber: #E8A020;
+    --amber-light: #F5B83D;
+    --amber-pale: #FFF8EC;
+    --teal: #3A8C6E;
+    --cream: #FAF7F2;
+    --cream-dark: #F0EBE3;
+    --white: #FFFFFF;
+    --text-dark: #1A1A2E;
+    --text-mid: #3A3A50;
+    --text-light: #6B6B85;
+    --border: #D8D0C4;
+    --shadow: rgba(28, 35, 51, 0.14);
+    --shadow-amber: rgba(232, 160, 32, 0.22);
+    --shadow-strong: rgba(28, 35, 51, 0.28);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+    background: var(--cream);
+    color: var(--text-dark);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ---- SKIP LINK ---- */
+  .skip-link {
+    position: absolute; left: -9999px; top: 4px;
+    background: var(--amber); color: var(--text-dark);
+    padding: 8px 16px; border-radius: 4px;
+    font-size: 0.875rem; z-index: 9999; text-decoration: none;
+    font-weight: bold;
+  }
+  .skip-link:focus { left: 4px; }
+
+  /* ---- HERO ---- */
+  .hero {
+    background: var(--asphalt);
+    position: relative;
+    overflow: hidden;
+    padding: 72px 24px 80px;
+    text-align: center;
+  }
+
+  /* Subtle grid texture */
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  /* Amber glow orb */
+  .hero::after {
+    content: '';
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(232,160,32,0.12) 0%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .hero-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .hero-eyebrow {
+    display: inline-block;
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 20px;
+    padding: 6px 18px;
+    border: 1px solid rgba(232,160,32,0.35);
+    border-radius: 20px;
+    background: rgba(232,160,32,0.08);
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3.4rem);
+    font-weight: normal;
+    color: var(--white);
+    line-height: 1.18;
+    margin-bottom: 20px;
+    letter-spacing: -0.01em;
+    animation: fadeDown 0.6s 0.1s ease both;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--amber);
+  }
+
+  .hero-desc {
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-size: 1.05rem;
+    color: rgba(255,255,255,0.72);
+    line-height: 1.75;
+    max-width: 560px;
+    margin: 0 auto 36px;
+    animation: fadeDown 0.6s 0.2s ease both;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+    animation: fadeDown 0.6s 0.3s ease both;
+  }
+
+  .btn-hero-primary {
+    background: var(--amber);
+    color: var(--text-dark);
+    border: none;
+    padding: 14px 32px;
+    font-size: 0.95rem;
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-weight: 700;
+    border-radius: 50px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 18px var(--shadow-amber);
+  }
+  .btn-hero-primary:hover {
+    background: var(--amber-light);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px var(--shadow-amber);
+  }
+  .btn-hero-primary:focus { outline: 3px solid var(--white); outline-offset: 3px; }
+
+  .btn-hero-ghost {
+    background: transparent;
+    color: rgba(255,255,255,0.8);
+    border: 1px solid rgba(255,255,255,0.28);
+    padding: 14px 32px;
+    font-size: 0.95rem;
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-weight: 600;
+    border-radius: 50px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+  }
+  .btn-hero-ghost:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.5);
+    color: #fff;
+  }
+  .btn-hero-ghost:focus { outline: 3px solid var(--amber); outline-offset: 3px; }
+
+  /* ---- BYLINE STRIP ---- */
+  .byline-strip {
+    background: var(--navy);
+    padding: 16px 24px;
+    text-align: center;
+  }
+  .byline-strip p {
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.65);
+    letter-spacing: 0.06em;
+  }
+  .byline-strip p strong {
+    color: var(--amber);
+    font-weight: 700;
+  }
+
+  /* ---- SECTION ---- */
+  .section {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 64px 24px;
+  }
+
+  .section-eyebrow {
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 10px;
+  }
+
+  .section-heading {
+    font-size: clamp(1.5rem, 3vw, 2.1rem);
+    font-weight: normal;
+    color: var(--navy);
+    line-height: 1.25;
+    margin-bottom: 14px;
+  }
+
+  .section-body {
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-size: 1rem;
+    color: var(--text-mid);
+    line-height: 1.75;
+    max-width: 640px;
+  }
+
+  /* ---- FEATURE CHIPS ---- */
+  .feature-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 24px;
+  }
+  .feature-chip {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-size: 0.82rem;
+    color: var(--text-mid);
+    box-shadow: 0 2px 8px var(--shadow);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .feature-chip:hover { transform: translateY(-2px); box-shadow: 0 4px 14px var(--shadow); }
+  .feature-chip .chip-icon { font-size: 1rem; }
+  .feature-chip strong { color: var(--navy); }
+
+  /* ---- DIVIDER ---- */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 0 24px;
+  }
+
+  /* ---- GAME CARDS ---- */
+  .games-section {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 64px 24px;
+  }
+
+  .games-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    margin-top: 36px;
+  }
+
+  .game-card {
+    background: var(--white);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 6px 28px var(--shadow);
+    transition: transform 0.25s, box-shadow 0.25s;
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+  }
+  .game-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 44px var(--shadow-strong);
+  }
+  .game-card:focus {
+    outline: 3px solid var(--amber);
+    outline-offset: 3px;
+  }
+
+  .card-header {
+    padding: 32px 28px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card-header-g1 {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+  }
+  .card-header-g2 {
+    background: linear-gradient(135deg, var(--asphalt) 0%, #2E4A7A 100%);
+  }
+
+  /* Subtle pattern overlay on card headers */
+  .card-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 80% 20%, rgba(232,160,32,0.15) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .card-badge-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 14px;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 3px 8px rgba(0,0,0,0.3));
+  }
+
+  .card-game-title {
+    font-size: 1.5rem;
+    font-weight: normal;
+    color: var(--white);
+    margin-bottom: 6px;
+    position: relative;
+    z-index: 1;
+    letter-spacing: 0.01em;
+  }
+
+  .card-game-tagline {
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.62);
+    position: relative;
+    z-index: 1;
+    letter-spacing: 0.04em;
+    font-style: italic;
+  }
+
+  .card-body {
+    padding: 24px 28px 28px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-desc {
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-size: 0.9rem;
+    color: var(--text-mid);
+    line-height: 1.65;
+    margin-bottom: 20px;
+    flex: 1;
+  }
+
+  .card-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 22px;
+  }
+  .card-feature-tag {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-size: 0.75rem;
+    color: var(--text-light);
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+
+  .card-cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--navy);
+    color: var(--white);
+    border: none;
+    padding: 13px 20px;
+    border-radius: 12px;
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    letter-spacing: 0.04em;
+    transition: background 0.2s;
+    width: 100%;
+  }
+  .card-cta:hover { background: var(--navy-light); }
+  .card-cta .arrow {
+    font-size: 1.1rem;
+    transition: transform 0.2s;
+  }
+  .game-card:hover .card-cta .arrow { transform: translateX(4px); }
+
+  /* ---- HOW IT WORKS ---- */
+  .how-section {
+    background: var(--asphalt);
+    padding: 64px 24px;
+  }
+  .how-inner {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .how-inner .section-eyebrow { color: var(--amber); }
+  .how-inner .section-heading { color: var(--white); }
+  .how-inner .section-body { color: rgba(255,255,255,0.65); }
+
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 40px;
+  }
+
+  .step-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 28px 24px;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .step-card:hover {
+    background: rgba(255,255,255,0.09);
+    border-color: rgba(232,160,32,0.3);
+  }
+
+  .step-number {
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 12px;
+  }
+  .step-icon {
+    font-size: 2rem;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .step-title {
+    font-size: 1.05rem;
+    color: var(--white);
+    margin-bottom: 8px;
+    font-weight: normal;
+  }
+  .step-desc {
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.58);
+    line-height: 1.65;
+  }
+
+  /* ---- FOOTER ---- */
+  footer {
+    background: var(--navy);
+    padding: 36px 24px;
+    text-align: center;
+  }
+  .footer-name {
+    font-size: 1rem;
+    color: var(--white);
+    margin-bottom: 6px;
+    letter-spacing: 0.03em;
+  }
+  .footer-creds {
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 20px;
+    letter-spacing: 0.06em;
+  }
+  .footer-site-btn {
+    display: inline-block;
+    background: var(--amber);
+    color: var(--text-dark);
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 10px 26px;
+    border-radius: 50px;
+    text-decoration: none;
+    letter-spacing: 0.05em;
+    transition: background 0.2s, transform 0.15s;
+    margin-bottom: 24px;
+    display: inline-block;
+  }
+  .footer-site-btn:hover { background: var(--amber-light); transform: translateY(-1px); }
+  .footer-site-btn:focus { outline: 3px solid var(--white); outline-offset: 3px; }
+  .footer-note {
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.04em;
+  }
+
+  /* ---- ANIMATIONS ---- */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.55s ease, transform 0.55s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+    .reveal { opacity: 1; transform: none; }
+  }
+
+  /* ---- RESPONSIVE ---- */
+  @media (max-width: 660px) {
+    .games-grid { grid-template-columns: 1fr; }
+    .steps-grid { grid-template-columns: 1fr; }
+    .hero { padding: 52px 20px 60px; }
+    .hero-actions { flex-direction: column; align-items: center; }
+    .btn-hero-primary, .btn-hero-ghost { width: 100%; max-width: 320px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<!-- ==================== HERO ==================== -->
+<header>
+  <div class="hero">
+    <div class="hero-inner">
+      <span class="hero-eyebrow">Concept Game Showcase</span>
+      <h1>See What a Concept Game<br><em>Feels Like</em></h1>
+      <p class="hero-desc">These are a couple of examples of what is possible when using Claude AI as a coding assistant. They show a few of the elements incorporated into Chapter Concept Games designed for higher education.</p>
+      <div class="hero-actions">
+        <a href="#games" class="btn-hero-primary">Play the Games</a>
+        <a href="#" class="btn-hero-ghost" id="site-link">Visit My Full Site</a>
+      </div>
+    </div>
+  </div>
+  <div class="byline-strip">
+    <p>Created by <strong>Jennifer Coon, CIA, CFE</strong></p>
+  </div>
+</header>
+
+<!-- ==================== ABOUT ==================== -->
+<main id="main-content">
+  <section class="section reveal" aria-labelledby="about-heading">
+    <div class="section-eyebrow">What You Are Looking At</div>
+    <h2 class="section-heading" id="about-heading">Games designed to make students think, not just click.</h2>
+    <p class="section-body">These games require students to reason, evaluate, and make judgments, not recall definitions. Each game is designed around the specific concepts where students lose the thread, and requires genuine thinking to complete. The mechanics change by chapter. The purpose does not.</p>
+
+    <div class="feature-chips" role="list">
+      <div class="feature-chip reveal" role="listitem">
+        <span class="chip-icon" aria-hidden="true">🎯</span>
+        <span><strong>Higher-order thinking</strong> Reason, evaluate, and judge</span>
+      </div>
+      <div class="feature-chip reveal" role="listitem">
+        <span class="chip-icon" aria-hidden="true">🔁</span>
+        <span><strong>Two-attempt architecture</strong> with targeted hints</span>
+      </div>
+      <div class="feature-chip reveal" role="listitem">
+        <span class="chip-icon" aria-hidden="true">🏅</span>
+        <span><strong>Badge earned</strong> at 75% threshold</span>
+      </div>
+      <div class="feature-chip reveal" role="listitem">
+        <span class="chip-icon" aria-hidden="true">✍️</span>
+        <span><strong>Reflection gate</strong> before score reveals</span>
+      </div>
+      <div class="feature-chip reveal" role="listitem">
+        <span class="chip-icon" aria-hidden="true">♿</span>
+        <span><strong>WCAG 2.1 AA</strong> accessible</span>
+      </div>
+      <div class="feature-chip reveal" role="listitem">
+        <span class="chip-icon" aria-hidden="true">🤖</span>
+        <span><strong>Built with Claude AI</strong> as coding assistant</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ==================== GAMES ==================== -->
+  <section class="games-section" id="games" aria-labelledby="games-heading">
+    <div class="section-eyebrow">Two Games, Two Formats</div>
+    <h2 class="section-heading" id="games-heading">Choose a game and play.</h2>
+    <p class="section-body" style="font-family:'Trebuchet MS','Segoe UI',sans-serif;">Each game demonstrates different mechanics. Together they show the range of what is possible with this approach. Both take about 10 minutes.</p>
+
+    <div class="games-grid">
+
+      <!-- Game 1 -->
+      <a href="game1_classifier.html" class="game-card reveal" aria-label="Play The Classifier: AI sorting and judgment questions">
+        <div class="card-header card-header-g1">
+          <span class="card-badge-icon" aria-hidden="true">🔍</span>
+          <h3 class="card-game-title">The Classifier</h3>
+          <p class="card-game-tagline">You know how to break it down.</p>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">Drag and drop AI scenarios into categories, then answer four evaluate-level judgment questions about what AI can and cannot actually do. Earn The Analyst badge at 75%.</p>
+          <div class="card-features" aria-label="Game features">
+            <span class="card-feature-tag">Drag and Drop Sorting</span>
+            <span class="card-feature-tag">Two-Attempt MC</span>
+            <span class="card-feature-tag">Category Explanations</span>
+            <span class="card-feature-tag">Reflection Card</span>
+            <span class="card-feature-tag">Badge Download</span>
+          </div>
+          <span class="card-cta" aria-hidden="true">
+            Play The Classifier
+            <span class="arrow">&#8594;</span>
+          </span>
+        </div>
+      </a>
+
+      <!-- Game 2 -->
+      <a href="game2_road_test.html" class="game-card reveal" aria-label="Play The Road Test: personal finance car buying game">
+        <div class="card-header card-header-g2">
+          <span class="card-badge-icon" aria-hidden="true">🏎️</span>
+          <h3 class="card-game-title">The Road Test</h3>
+          <p class="card-game-tagline">You ran the numbers before you signed.</p>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">Navigate three car-buying decisions, then drag a live loan term slider and watch monthly payment and total interest update in real time. Earn The Road Warrior badge at 75%.</p>
+          <div class="card-features" aria-label="Game features">
+            <span class="card-feature-tag">Scenario Reveal</span>
+            <span class="card-feature-tag">Live Slider and Graph</span>
+            <span class="card-feature-tag">Real Amortization Math</span>
+            <span class="card-feature-tag">Reflection Card</span>
+            <span class="card-feature-tag">Badge Download</span>
+          </div>
+          <span class="card-cta" aria-hidden="true">
+            Play The Road Test
+            <span class="arrow">&#8594;</span>
+          </span>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ==================== HOW IT WORKS ==================== -->
+  <section class="how-section" aria-labelledby="how-heading">
+    <div class="how-inner">
+      <div class="section-eyebrow">How These Were Built</div>
+      <h2 class="section-heading" id="how-heading">Claude AI as a coding assistant.</h2>
+      <p class="section-body">The pedagogical decisions, concept targets, student struggle points, and assessment philosophy came entirely from the instructor. Claude was used as an execution partner to build and refine the HTML and JavaScript based on those decisions.</p>
+
+      <div class="steps-grid">
+        <div class="step-card reveal">
+          <div class="step-number">Step 01</div>
+          <span class="step-icon" aria-hidden="true">🧠</span>
+          <h3 class="step-title">Instructor designs the experience</h3>
+          <p class="step-desc">Which student struggle to target, what cognitive demand to aim for, how scoring should work, what the reflection should ask. All instructor decisions.</p>
+        </div>
+        <div class="step-card reveal">
+          <div class="step-number">Step 02</div>
+          <span class="step-icon" aria-hidden="true">🤖</span>
+          <h3 class="step-title">Claude builds the game</h3>
+          <p class="step-desc">Writing HTML, CSS, and JavaScript to the instructor's specification. Proposing question answer choices for review. Building scoring logic and download mechanics.</p>
+        </div>
+        <div class="step-card reveal">
+          <div class="step-number">Step 03</div>
+          <span class="step-icon" aria-hidden="true">🔁</span>
+          <h3 class="step-title">Test, review, revise</h3>
+          <p class="step-desc">Each game goes through multiple rounds of testing and revision. The iteration is not uncertainty about what to build. It is the normal work of getting instructional design right.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ==================== FOOTER ==================== -->
+<footer>
+  <p class="footer-name">Jennifer Coon, CIA, CFE</p>
+
+  <a href="#" id="footer-site-link" class="footer-site-btn">Visit My Full Site</a>
+  <br>
+  <p class="footer-note">Concept Game Showcase &nbsp;&bull;&nbsp; Built with Claude AI</p>
+</footer>
+
+<script>
+  // ---- SCROLL REVEAL ----
+  const revealEls = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        // Stagger siblings slightly
+        const siblings = entry.target.parentElement.querySelectorAll('.reveal');
+        let delay = 0;
+        siblings.forEach((s, idx) => { if (s === entry.target) delay = idx * 80; });
+        setTimeout(() => entry.target.classList.add('visible'), delay);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+
+  revealEls.forEach(el => observer.observe(el));
+
+  // ---- SITE LINK PLACEHOLDER ----
+  // When your Google Site is live, replace the '#' below with your full URL
+  // Example: const SITE_URL = 'https://sites.google.com/view/your-site-name';
+  const SITE_URL = 'https://sites.google.com/view/jennifercoon/the-engagement-lab/chapter-concept-games';
+  document.getElementById('site-link').href = SITE_URL;
+  document.getElementById('footer-site-link').href = SITE_URL;
+
+  // Hide the site button entirely until URL is set
+  if (SITE_URL === '#') {
+    document.getElementById('site-link').style.display = 'none';
+    document.getElementById('footer-site-link').style.display = 'none';
+  }
+</script>
+</body>
+</html>
