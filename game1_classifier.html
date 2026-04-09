@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Classifier | Concept Game Showcase</title>
+<style>
+  :root {
+    --blue: #2E4A7A;
+    --blue-light: #3D5F9A;
+    --blue-dark: #1E3560;
+    --amber: #E8A020;
+    --amber-light: #F5B83D;
+    --teal: #3A8C6E;
+    --teal-light: #4BA882;
+    --red: #C0392B;
+    --red-light: #E74C3C;
+    --cream: #FAF7F2;
+    --cream-dark: #F0EBE3;
+    --white: #FFFFFF;
+    --text-dark: #1A1A2E;
+    --text-mid: #3A3A50;
+    --text-light: #6B6B85;
+    --border: #D8D0C4;
+    --shadow: rgba(46, 74, 122, 0.12);
+    --shadow-strong: rgba(46, 74, 122, 0.22);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Georgia', serif;
+    background: var(--cream);
+    color: var(--text-dark);
+    min-height: 100vh;
+  }
+
+  /* ---- SKIP LINK ---- */
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 4px;
+    background: var(--blue);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    z-index: 9999;
+    text-decoration: none;
+  }
+  .skip-link:focus { left: 4px; }
+
+  /* ---- SR ONLY ---- */
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  /* ---- SCREENS ---- */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ---- HEADER BAR ---- */
+  .game-header {
+    background: var(--blue);
+    color: #fff;
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .game-header h1 {
+    font-size: 1.35rem;
+    font-weight: normal;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .header-badge {
+    background: var(--amber);
+    color: var(--text-dark);
+    font-size: 0.78rem;
+    font-weight: bold;
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* ---- PROGRESS BAR ---- */
+  .progress-bar-wrap {
+    background: var(--blue-dark);
+    height: 5px;
+    flex-shrink: 0;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--amber);
+    transition: width 0.5s ease;
+  }
+
+  /* ---- MAIN CONTENT AREA ---- */
+  main {
+    flex: 1;
+    padding: 32px 24px;
+    max-width: 860px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* ---- INTRO SCREEN ---- */
+  #screen-intro {
+    background: var(--cream);
+  }
+  .intro-hero {
+    text-align: center;
+    padding: 60px 24px 40px;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  .intro-icon {
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    display: block;
+  }
+  .intro-hero h2 {
+    font-size: 2.4rem;
+    color: var(--blue);
+    margin-bottom: 12px;
+    line-height: 1.2;
+  }
+  .intro-hero p {
+    font-size: 1.05rem;
+    color: var(--text-mid);
+    line-height: 1.7;
+    margin-bottom: 28px;
+  }
+  .intro-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 36px;
+  }
+  .chip {
+    background: var(--blue);
+    color: #fff;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    letter-spacing: 0.04em;
+  }
+  .name-form {
+    max-width: 380px;
+    margin: 0 auto;
+  }
+  .name-form label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: var(--text-mid);
+    margin-bottom: 8px;
+    letter-spacing: 0.03em;
+  }
+  .name-form input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    background: var(--white);
+    color: var(--text-dark);
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+  }
+  .name-form input:focus {
+    outline: 3px solid var(--amber);
+    outline-offset: 2px;
+    border-color: var(--blue);
+  }
+
+  /* ---- BUTTONS ---- */
+  .btn-primary {
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    padding: 13px 32px;
+    font-size: 1rem;
+    font-family: inherit;
+    border-radius: 8px;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: background 0.2s, transform 0.1s;
+    display: inline-block;
+  }
+  .btn-primary:hover { background: var(--blue-light); }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:focus { outline: 3px solid var(--amber); outline-offset: 3px; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-amber {
+    background: var(--amber);
+    color: var(--text-dark);
+    border: none;
+    padding: 13px 32px;
+    font-size: 1rem;
+    font-family: inherit;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    letter-spacing: 0.04em;
+    transition: background 0.2s, transform 0.1s;
+    display: inline-block;
+  }
+  .btn-amber:hover { background: var(--amber-light); }
+  .btn-amber:active { transform: scale(0.98); }
+  .btn-amber:focus { outline: 3px solid var(--blue); outline-offset: 3px; }
+
+  .btn-teal {
+    background: var(--teal);
+    color: #fff;
+    border: none;
+    padding: 13px 32px;
+    font-size: 1rem;
+    font-family: inherit;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    letter-spacing: 0.04em;
+    transition: background 0.2s;
+  }
+  .btn-teal:hover { background: var(--teal-light); }
+  .btn-teal:focus { outline: 3px solid var(--amber); outline-offset: 3px; }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--blue);
+    border: 2px solid var(--blue);
+    padding: 11px 28px;
+    font-size: 1rem;
+    font-family: inherit;
+    border-radius: 8px;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: all 0.2s;
+  }
+  .btn-outline:hover { background: var(--blue); color: #fff; }
+  .btn-outline:focus { outline: 3px solid var(--amber); outline-offset: 3px; }
+
+  /* ---- SECTION LABEL ---- */
+  .section-label {
+    font-size: 0.78rem;
+    font-weight: bold;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 8px;
+  }
+  .section-title {
+    font-size: 1.5rem;
+    color: var(--blue);
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+  .section-desc {
+    font-size: 0.95rem;
+    color: var(--text-mid);
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
+  /* ---- SORT SCREEN ---- */
+  #screen-sort { background: var(--cream); }
+
+  .sort-instructions {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--amber);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    font-size: 0.9rem;
+    color: var(--text-mid);
+    line-height: 1.5;
+  }
+
+  .sort-workspace {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .items-bank {
+    background: var(--white);
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    min-height: 280px;
+  }
+  .items-bank h3 {
+    font-size: 0.82rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-light);
+    margin-bottom: 14px;
+    font-weight: bold;
+  }
+
+  .drag-item {
+    background: var(--blue);
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: grab;
+    font-size: 0.88rem;
+    line-height: 1.4;
+    border: 2px solid transparent;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    user-select: none;
+    position: relative;
+  }
+  .drag-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px var(--shadow-strong);
+  }
+  .drag-item.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+  }
+  .drag-item:focus {
+    outline: 3px solid var(--amber);
+    outline-offset: 2px;
+  }
+  .drag-item::before {
+    content: ':::';
+    font-size: 0.75rem;
+    opacity: 0.5;
+    margin-right: 8px;
+    letter-spacing: 2px;
+  }
+
+  .categories-grid {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .category-zone {
+    background: var(--white);
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    min-height: 140px;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .category-zone.drag-over {
+    border-color: var(--amber);
+    background: #FFF8EC;
+  }
+  .category-zone h3 {
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid;
+  }
+  .cat-excels h3 { color: var(--teal); border-color: var(--teal); }
+  .cat-struggles h3 { color: var(--red); border-color: var(--red); }
+  .cat-humans h3 { color: var(--blue); border-color: var(--blue); }
+  .cat-depends h3 { color: var(--amber); border-color: var(--amber); }
+
+  .category-zone .drag-item {
+    font-size: 0.82rem;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+  }
+  .category-zone .drag-item.correct-item {
+    background: var(--teal);
+    cursor: default;
+  }
+  .category-zone .drag-item.wrong-item {
+    background: var(--red);
+    animation: shake 0.4s ease;
+  }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  .sort-explanations {
+    display: none;
+    grid-column: 1 / -1;
+    margin-top: 8px;
+  }
+  .sort-explanations.visible { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .explanation-box {
+    background: var(--white);
+    border-radius: 10px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    font-size: 0.86rem;
+    line-height: 1.55;
+    color: var(--text-mid);
+  }
+  .explanation-box strong {
+    display: block;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .explanation-box.ex-excels strong { color: var(--teal); }
+  .explanation-box.ex-struggles strong { color: var(--red); }
+  .explanation-box.ex-humans strong { color: var(--blue); }
+  .explanation-box.ex-depends strong { color: var(--amber); }
+
+  .sort-submit-area {
+    margin-top: 20px;
+    text-align: center;
+    padding: 16px;
+    background: var(--white);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+  .sort-submit-area p {
+    font-size: 0.88rem;
+    color: var(--text-light);
+    margin-bottom: 12px;
+  }
+
+  .sort-feedback {
+    margin-top: 12px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    display: none;
+  }
+  .sort-feedback.success {
+    background: #EBF7F3;
+    border: 1px solid var(--teal);
+    color: var(--teal);
+    display: block;
+  }
+  .sort-feedback.error {
+    background: #FDECEA;
+    border: 1px solid var(--red);
+    color: var(--red);
+    display: block;
+  }
+
+  /* ---- QUIZ SCREEN ---- */
+  #screen-quiz { background: var(--cream); }
+
+  .question-card {
+    background: var(--white);
+    border-radius: 14px;
+    padding: 28px;
+    box-shadow: 0 4px 18px var(--shadow);
+    margin-bottom: 20px;
+  }
+  .question-number {
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--amber);
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  .question-text {
+    font-size: 1.05rem;
+    color: var(--text-dark);
+    line-height: 1.65;
+    margin-bottom: 20px;
+  }
+
+  .answer-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .answer-btn {
+    background: var(--cream);
+    border: 2px solid var(--border);
+    padding: 12px 16px;
+    border-radius: 8px;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.92rem;
+    color: var(--text-dark);
+    line-height: 1.5;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .answer-btn:hover:not(:disabled) {
+    border-color: var(--blue);
+    background: #EFF3FA;
+  }
+  .answer-btn:focus { outline: 3px solid var(--amber); outline-offset: 2px; }
+  .answer-btn:disabled { cursor: default; }
+  .answer-btn.selected { border-color: var(--blue); background: #EFF3FA; }
+  .answer-btn.correct { background: #EBF7F3; border-color: var(--teal); color: var(--teal); }
+  .answer-btn.incorrect { background: #FDECEA; border-color: var(--red); color: var(--red); }
+
+  .feedback-panel {
+    margin-top: 16px;
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    display: none;
+  }
+  .feedback-panel.hint {
+    background: #FFF8EC;
+    border: 1px solid var(--amber);
+    color: #7A5000;
+    display: block;
+  }
+  .feedback-panel.correct {
+    background: #EBF7F3;
+    border: 1px solid var(--teal);
+    color: #1A5C44;
+    display: block;
+  }
+  .feedback-panel.incorrect {
+    background: #FDECEA;
+    border: 1px solid var(--red);
+    color: #7A1A10;
+    display: block;
+  }
+
+  .question-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+  }
+  .attempts-indicator {
+    font-size: 0.82rem;
+    color: var(--text-light);
+  }
+
+  /* ---- REFLECTION SCREEN ---- */
+  #screen-reflection { background: var(--cream); }
+
+  .reflection-card-ui {
+    background: var(--white);
+    border-radius: 14px;
+    padding: 32px;
+    box-shadow: 0 4px 18px var(--shadow);
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  .reflection-card-ui h2 {
+    font-size: 1.4rem;
+    color: var(--blue);
+    margin-bottom: 8px;
+  }
+  .reflection-card-ui p {
+    font-size: 0.95rem;
+    color: var(--text-mid);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .reflection-prompt {
+    background: var(--cream);
+    border-left: 4px solid var(--amber);
+    padding: 14px 18px;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 20px;
+    font-size: 0.95rem;
+    color: var(--text-mid);
+    font-style: italic;
+    line-height: 1.6;
+  }
+  .reflection-card-ui textarea {
+    width: 100%;
+    height: 130px;
+    padding: 14px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+    background: var(--white);
+    resize: vertical;
+    line-height: 1.6;
+    margin-bottom: 8px;
+    transition: border-color 0.2s;
+  }
+  .reflection-card-ui textarea:focus {
+    outline: 3px solid var(--amber);
+    outline-offset: 2px;
+    border-color: var(--blue);
+  }
+  .char-count {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-bottom: 16px;
+    text-align: right;
+  }
+  .char-count.met { color: var(--teal); font-weight: bold; }
+
+  /* ---- RESULTS SCREEN ---- */
+  #screen-results { background: var(--cream); }
+
+  .results-hero {
+    background: var(--blue);
+    color: #fff;
+    padding: 48px 32px;
+    text-align: center;
+  }
+  .results-hero h2 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    font-weight: normal;
+  }
+  .score-display-big {
+    font-size: 4rem;
+    font-weight: bold;
+    color: var(--amber);
+    line-height: 1;
+    margin: 16px 0 8px;
+  }
+  .score-label-text {
+    font-size: 0.95rem;
+    opacity: 0.8;
+    letter-spacing: 0.06em;
+  }
+
+  .results-content {
+    max-width: 640px;
+    margin: 32px auto;
+    padding: 0 24px;
+  }
+  .results-breakdown {
+    background: var(--white);
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: 0 4px 18px var(--shadow);
+    margin-bottom: 24px;
+  }
+  .results-breakdown h3 {
+    font-size: 1rem;
+    color: var(--blue);
+    margin-bottom: 16px;
+    letter-spacing: 0.04em;
+  }
+  .breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--cream-dark);
+    font-size: 0.9rem;
+  }
+  .breakdown-row:last-child { border-bottom: none; }
+  .breakdown-label { color: var(--text-mid); }
+  .breakdown-score { font-weight: bold; color: var(--blue); }
+
+  .badge-section {
+    background: var(--white);
+    border-radius: 14px;
+    padding: 32px;
+    text-align: center;
+    box-shadow: 0 4px 18px var(--shadow);
+    margin-bottom: 24px;
+  }
+  .badge-section h3 {
+    font-size: 1.1rem;
+    color: var(--blue);
+    margin-bottom: 6px;
+  }
+  .badge-section p {
+    font-size: 0.88rem;
+    color: var(--text-light);
+    margin-bottom: 20px;
+  }
+  .badge-preview {
+    width: 140px;
+    height: 140px;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    background: var(--blue);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 28px var(--shadow-strong);
+  }
+  .badge-preview .badge-icon { font-size: 3rem; }
+  .badge-preview .badge-title {
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-top: 4px;
+    font-weight: bold;
+  }
+  .badge-tagline {
+    font-size: 0.95rem;
+    color: var(--text-mid);
+    font-style: italic;
+    margin-bottom: 20px;
+  }
+  .badge-locked {
+    opacity: 0.4;
+    filter: grayscale(100%);
+  }
+  .badge-locked-msg {
+    font-size: 0.88rem;
+    color: var(--red);
+    margin-bottom: 16px;
+  }
+
+  .download-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+
+  .replay-link {
+    text-align: center;
+    margin-top: 8px;
+  }
+  .replay-link button {
+    background: none;
+    border: none;
+    color: var(--blue);
+    font-family: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 4px 8px;
+  }
+  .replay-link button:focus { outline: 3px solid var(--amber); outline-offset: 2px; }
+
+  /* ---- LIVE REGION ---- */
+  #live-region { position: absolute; left: -9999px; }
+
+  /* ---- RESPONSIVE ---- */
+  @media (max-width: 640px) {
+    .sort-workspace { grid-template-columns: 1fr; }
+    .categories-grid { grid-template-columns: 1fr; }
+    .intro-hero h2 { font-size: 1.8rem; }
+    .game-header h1 { font-size: 1.1rem; }
+  }
+
+  /* ---- TRANSITIONS ---- */
+  .screen { animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<div id="live-region" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+
+<!-- ===================== INTRO SCREEN ===================== -->
+<div id="screen-intro" class="screen active" role="main">
+  <div class="game-header">
+    <h1>The Classifier</h1>
+    <span class="header-badge">Concept Game Showcase</span>
+  </div>
+  <main id="main-content">
+    <div class="intro-hero">
+      <span class="intro-icon" aria-hidden="true">🧠</span>
+      <h2>Can You Sort It Out?</h2>
+      <p>AI is everywhere. But not every task belongs to AI, and not every AI task is equal. In this game, you will sort scenarios into categories, then answer some harder questions about what AI can and cannot actually do. It takes about 10 minutes.</p>
+      <div class="intro-chips">
+        <span class="chip">Drag and Drop Sorting</span>
+        <span class="chip">Evaluate-Level Questions</span>
+        <span class="chip">Badge at 85%</span>
+        <span class="chip">Reflection Card</span>
+      </div>
+      <div class="name-form">
+        <label for="player-name">Your name (for your reflection card)</label>
+        <input type="text" id="player-name" placeholder="Enter your name..." autocomplete="given-name" maxlength="50">
+        <button class="btn-primary" onclick="startGame()" style="width:100%;">Start the Game</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ===================== SORT SCREEN ===================== -->
+<div id="screen-sort" class="screen" role="main" aria-labelledby="sort-heading">
+  <div class="game-header">
+    <h1>The Classifier</h1>
+    <span class="header-badge" id="sort-progress-label">Part 1 of 2</span>
+  </div>
+  <div class="progress-bar-wrap" role="progressbar" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" aria-label="Game progress">
+    <div class="progress-bar-fill" id="progress-fill" style="width:25%"></div>
+  </div>
+  <main id="sort-main">
+    <div class="section-label">Part 1 of 2: Sorting</div>
+    <h2 class="section-title" id="sort-heading">Sort the AI Scenarios</h2>
+    <p class="section-desc">Drag each item into the category that best describes it. Some may feel like they belong in more than one place. Choose the best fit. When all items are placed, submit your sort.</p>
+
+    <div class="sort-instructions" role="note">
+      <strong>How to sort:</strong> Drag items from the bank below into one of the four category boxes. You can drag items between categories before submitting. Items already in a category can be moved back to the bank or to a different category.
+    </div>
+
+    <div class="sort-workspace">
+      <div class="items-bank" id="items-bank" role="list" aria-label="Items to sort">
+        <h3>Items to Sort</h3>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p style="font-size:0.85rem; color:var(--text-light); margin-top:8px;">Place all 8 items into categories below:</p>
+      </div>
+
+      <div class="categories-grid" id="categories-grid">
+        <div class="category-zone cat-excels" id="zone-excels"
+             role="list" aria-label="AI is Reliable Here"
+             ondragover="onDragOver(event)" ondrop="onDrop(event,'excels')" ondragleave="onDragLeave(event)">
+          <h3>AI is Reliable Here</h3>
+        </div>
+        <div class="category-zone cat-struggles" id="zone-struggles"
+             role="list" aria-label="AI Often Misses This"
+             ondragover="onDragOver(event)" ondrop="onDrop(event,'struggles')" ondragleave="onDragLeave(event)">
+          <h3>AI Often Misses This</h3>
+        </div>
+        <div class="category-zone cat-humans" id="zone-humans"
+             role="list" aria-label="Human Judgment Adds Most Value"
+             ondragover="onDragOver(event)" ondrop="onDrop(event,'humans')" ondragleave="onDragLeave(event)">
+          <h3>Human Judgment Adds Most Value</h3>
+        </div>
+        <div class="category-zone cat-depends" id="zone-depends"
+             role="list" aria-label="Context Determines the Best Tool"
+             ondragover="onDragOver(event)" ondrop="onDrop(event,'depends')" ondragleave="onDragLeave(event)">
+          <h3>Context Determines the Best Tool</h3>
+        </div>
+      </div>
+
+      <!-- Explanation panels shown after sort is checked -->
+      <div class="sort-explanations" id="sort-explanations" role="region" aria-label="Category reasoning" aria-live="polite">
+        <div class="explanation-box ex-excels">
+          <strong>AI is Reliable Here</strong>
+          AI performs consistently on large-scale processing, pattern recognition, translation, and summarization. Speed and consistency are genuine strengths when accuracy can be verified after the fact.
+        </div>
+        <div class="explanation-box ex-struggles">
+          <strong>AI Often Misses This</strong>
+          Tasks requiring nuanced reading of tone, relationship context, or lived experience tend to trip AI up. It may produce a plausible-sounding response that misses what a human would catch immediately.
+        </div>
+        <div class="explanation-box ex-humans">
+          <strong>Human Judgment Adds Most Value</strong>
+          Ethical decisions, emotional attunement, and high-stakes interpersonal situations benefit most from human presence. The cost of getting these wrong often outweighs any efficiency gain from delegation.
+        </div>
+        <div class="explanation-box ex-depends">
+          <strong>Context Determines the Best Tool</strong>
+          Some tasks work well with AI in low-stakes or first-draft situations but need human review before they matter. The same task can belong here or in another category entirely depending on how it is used.
+        </div>
+      </div>
+
+    </div>
+
+    <div class="sort-submit-area" id="sort-submit-area">
+      <p id="sort-status-text">Place all 8 items to continue.</p>
+      <button class="btn-primary" id="sort-submit-btn" onclick="submitSort()" disabled>Check My Sort</button>
+      <div class="sort-feedback" id="sort-feedback" role="alert"></div>
+    </div>
+  </main>
+</div>
+
+<!-- ===================== QUIZ SCREEN ===================== -->
+<div id="screen-quiz" class="screen" role="main" aria-labelledby="quiz-heading">
+  <div class="game-header">
+    <h1>The Classifier</h1>
+    <span class="header-badge" id="quiz-progress-label">Part 2 of 2</span>
+  </div>
+  <div class="progress-bar-wrap" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" aria-label="Game progress">
+    <div class="progress-bar-fill" id="quiz-progress-fill" style="width:60%"></div>
+  </div>
+  <main id="quiz-main">
+    <div class="section-label" id="quiz-section-label">Part 2 of 2: Judgment Questions</div>
+    <h2 class="section-title" id="quiz-heading">Test Your Thinking</h2>
+    <p class="section-desc">These questions go deeper. There are no trick answers, but some require you to think carefully about what AI actually does versus what it appears to do.</p>
+
+    <div id="question-container"></div>
+
+    <div class="question-nav">
+      <div class="attempts-indicator" id="attempts-indicator" aria-live="polite"></div>
+      <button class="btn-primary" id="quiz-next-btn" onclick="nextQuestion()" disabled>Next Question</button>
+    </div>
+  </main>
+</div>
+
+<!-- ===================== REFLECTION SCREEN ===================== -->
+<div id="screen-reflection" class="screen" role="main" aria-labelledby="reflection-heading">
+  <div class="game-header">
+    <h1>The Classifier</h1>
+    <span class="header-badge">Reflection</span>
+  </div>
+  <div class="progress-bar-wrap" role="progressbar" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100" aria-label="Game progress">
+    <div class="progress-bar-fill" style="width:85%"></div>
+  </div>
+  <main>
+    <div class="reflection-card-ui">
+      <h2 id="reflection-heading">Before You See Your Score</h2>
+      <p>Take a moment to reflect. This is not graded. It is for you. Your response will appear on your downloadable reflection card.</p>
+      <div class="reflection-prompt">
+        Think about a task you do regularly, in your work or personal life, that you have considered handing off to AI. After playing this game, what is one thing that makes you want to pause before doing that? Be specific about the task and the hesitation.
+      </div>
+      <label for="reflection-text" class="sr-only">Your reflection response</label>
+      <textarea id="reflection-text" placeholder="Type your reflection here..." aria-describedby="char-count-display" oninput="checkReflection()"></textarea>
+      <div class="char-count" id="char-count-display">Minimum 20 characters. You have typed <span id="char-count">0</span>.</div>
+      <button class="btn-amber" id="reflection-submit-btn" onclick="goToResults()" disabled style="width:100%;">See My Results</button>
+    </div>
+  </main>
+</div>
+
+<!-- ===================== RESULTS SCREEN ===================== -->
+<div id="screen-results" class="screen" role="main" aria-labelledby="results-heading">
+  <div class="results-hero">
+    <p style="font-size:0.85rem; letter-spacing:0.12em; text-transform:uppercase; opacity:0.7; margin-bottom:8px;">Your Score</p>
+    <div class="score-display-big" id="score-display-big" aria-live="polite">--</div>
+    <p class="score-label-text" id="score-label-text">Calculating...</p>
+    <h2 id="results-heading" style="margin-top:16px; font-size:1.3rem;">The Classifier</h2>
+  </div>
+
+  <div class="results-content">
+    <div class="results-breakdown">
+      <h3>Score Breakdown</h3>
+      <div class="breakdown-row">
+        <span class="breakdown-label">Part 1: AI Sorting</span>
+        <span class="breakdown-score" id="sort-score-display">--</span>
+      </div>
+      <div class="breakdown-row">
+        <span class="breakdown-label">Part 2: Judgment Questions</span>
+        <span class="breakdown-score" id="quiz-score-display">--</span>
+      </div>
+      <div class="breakdown-row" style="border-top: 2px solid var(--border); padding-top:12px; margin-top:4px;">
+        <span class="breakdown-label" style="font-weight:bold;">Total</span>
+        <span class="breakdown-score" id="total-score-display" style="font-size:1.1rem;">--</span>
+      </div>
+    </div>
+
+    <div class="badge-section" id="badge-section">
+      <h3 id="badge-title-display">Badge Status</h3>
+      <p id="badge-sub-display">Checking your score...</p>
+      <div class="badge-preview" id="badge-preview-el">
+        <span class="badge-icon" aria-hidden="true">🔍</span>
+        <span class="badge-title">The Analyst</span>
+      </div>
+      <p class="badge-tagline">"You know how to break it down."</p>
+    </div>
+
+    <div class="download-actions">
+      <button class="btn-teal" id="download-card-btn" onclick="downloadReflectionCard()">Download Reflection Card</button>
+      <button class="btn-amber" id="download-badge-btn" onclick="downloadBadge()" style="display:none;">Download Badge</button>
+    </div>
+
+    <div class="replay-link">
+      <button onclick="replayGame()">Play Again</button>
+    </div>
+
+    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:16px; padding-top:16px; border-top:1px solid var(--cream-dark);">
+      <a href="game2_road_test.html" style="background:var(--blue); color:#fff; border:none; padding:11px 24px; font-size:0.9rem; font-family:inherit; border-radius:8px; cursor:pointer; letter-spacing:0.04em; text-decoration:none; display:inline-block; transition:background 0.2s;" onmouseover="this.style.background='#3D5F9A'" onmouseout="this.style.background='#2E4A7A'">Try the Other Game</a>
+      <a href="https://sites.google.com/view/jennifercoon/the-engagement-lab/chapter-concept-games" style="background:transparent; color:var(--blue); border:2px solid var(--blue); padding:9px 24px; font-size:0.9rem; font-family:inherit; border-radius:8px; cursor:pointer; letter-spacing:0.04em; text-decoration:none; display:inline-block; transition:all 0.2s;" onmouseover="this.style.background='#2E4A7A';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='#2E4A7A'">Back to Showcase</a>
+    </div>
+  </div>
+</div>
+
+<canvas id="offscreen-canvas" style="display:none;" aria-hidden="true"></canvas>
+
+<script>
+// ===================== DATA =====================
+const SORT_ITEMS = [
+  { id: 'si1', text: 'Summarizing a 50-page document into key bullet points', correct: 'excels' },
+  { id: 'si2', text: 'Detecting genuine sarcasm in a casual text conversation', correct: 'struggles' },
+  { id: 'si3', text: 'Noticing a student seems discouraged and needs encouragement', correct: 'humans' },
+  { id: 'si4', text: 'Generating a first draft of a professional email', correct: 'depends' },
+  { id: 'si5', text: 'Translating a paragraph from English to Spanish', correct: 'excels' },
+  { id: 'si6', text: 'Making an ethical judgment about a complex personnel situation', correct: 'humans' },
+  { id: 'si7', text: 'Grading a written assignment for creativity and originality', correct: 'struggles' },
+  { id: 'si8', text: 'Deciding whether to use AI for a sensitive client communication', correct: 'depends' }
+];
+
+const SORT_FEEDBACK = {
+  excels: "AI is genuinely strong at processing, summarizing, and translating large amounts of text quickly and consistently.",
+  struggles: "AI struggles with nuanced human communication where tone, context, and relationship history matter.",
+  humans: "Human judgment, empathy, and ethical reasoning remain areas where lived experience is irreplaceable.",
+  depends: "Context is everything. The same task can be AI-appropriate in one situation and inappropriate in another."
+};
+
+const QUIZ_QUESTIONS = [
+  {
+    text: "A colleague says: 'I ran our department's 5-year plan through AI and it said the plan looks solid.' What is the most important limitation to flag?",
+    options: [
+      "AI evaluates plans against training data patterns, not your organization's actual goals",
+      "AI cannot read documents that contain proprietary information",
+      "The colleague should have used a more advanced AI model for strategic analysis",
+      "AI-generated assessments are only valid when reviewed by a certified analyst"
+    ],
+    correct: 0,
+    hint: "Think about what reference point AI is using when it calls the plan 'solid.' What does it actually know about your specific situation?",
+    explanation: "AI pattern-matches against its training data. It has no knowledge of your specific organization, your team's capacity, your stakeholders, or what 'solid' means in your context. It may call a plan solid because it resembles other plans it has seen, not because it has assessed YOUR situation."
+  },
+  {
+    text: "A student's essay was flagged as '78% AI-generated' by a detection tool. A faculty member gives the student a zero. What is the primary problem with this decision?",
+    options: [
+      "The zero is too harsh; partial credit would be more equitable",
+      "AI detection scores are probability estimates with known false positive rates, not evidence of AI use",
+      "Faculty should review the essay manually before relying on any automated tool",
+      "The student deserved a chance to revise and resubmit before receiving a grade penalty"
+    ],
+    correct: 1,
+    hint: "What does a percentage from an AI detection tool actually represent? Is 78% a fact or an estimate?",
+    explanation: "AI detection tools output probability scores, not verdicts. A 78% flag means the tool found patterns associated with AI-generated text. It does not confirm AI use. False positives occur regularly, particularly for non-native English speakers and writers who use formal or structured register."
+  },
+  {
+    text: "You ask AI to script a difficult conversation with a team member. The AI gives you a detailed script. What is the most important next step before using it?",
+    options: [
+      "Check that the script uses appropriate professional tone",
+      "Have the AI generate a second version to compare approaches",
+      "Rewrite any part that does not reflect your voice or what you know about this person",
+      "Read it aloud once to test the pacing and flow"
+    ],
+    correct: 2,
+    hint: "The AI has no knowledge of you, your communication style, or the specific relationship history involved. What does that mean for using the script as written?",
+    explanation: "The AI produced a generic script based on patterns. It does not know your voice, your relationship with this person, or what has happened between you. Using it verbatim means the conversation reflects an AI pattern rather than your actual professional judgment. The script is a starting point, not a finished tool."
+  },
+  {
+    text: "An educator claims: 'If AI can answer all my exam questions, the exam is worthless.' Evaluate this claim.",
+    options: [
+      "True. Any question AI can answer should be removed immediately.",
+      "False. Exams can measure process, judgment, and explanation that AI output alone cannot replicate.",
+      "Partially true, but only for multiple choice questions.",
+      "True, but only if students have unsupervised access to AI during the exam."
+    ],
+    correct: 1,
+    hint: "Is the ability to retrieve an answer the same as demonstrating understanding? What can an exam measure beyond whether the answer exists somewhere?",
+    explanation: "This claim confuses information retrieval with learning. Exams can measure process, judgment, explanation, and metacognitive skill. A student who explains why an answer is correct, applies a concept to a novel case, or evaluates a competing claim is demonstrating something AI output alone cannot replicate. The design question is whether the assessment requires something the student must actually think through."
+  }
+];
+
+// ===================== STATE =====================
+let playerName = '';
+let draggedItemId = null;
+let itemPlacements = {}; // itemId -> category
+let sortScore = 0;
+let quizScore = 0;
+let quizMaxScore = 0;
+let currentQuestion = 0;
+let questionAttempts = []; // attempts remaining per question
+let questionScores = [];
+let reflectionText = '';
+
+// ===================== HELPERS =====================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+    s.style.display = 'none';
+  });
+  const el = document.getElementById(id);
+  el.classList.add('active');
+  el.style.display = 'flex';
+  el.scrollTop = 0;
+  window.scrollTo(0,0);
+  announce(id === 'screen-sort' ? 'Part 1: Sorting' :
+           id === 'screen-quiz' ? 'Part 2: Judgment Questions' :
+           id === 'screen-reflection' ? 'Reflection' :
+           id === 'screen-results' ? 'Results screen' : '');
+}
+
+function announce(msg) {
+  const r = document.getElementById('live-region');
+  r.textContent = '';
+  setTimeout(() => r.textContent = msg, 50);
+}
+
+// ===================== INTRO =====================
+function startGame() {
+  const input = document.getElementById('player-name').value.trim();
+  playerName = input || 'Player';
+  buildSortItems();
+  showScreen('screen-sort');
+}
+
+// ===================== SORT MECHANICS =====================
+function buildSortItems() {
+  const bank = document.getElementById('items-bank');
+  // Clear existing items except h3
+  Array.from(bank.children).forEach(c => { if (c.tagName !== 'H3') c.remove(); });
+  // Clear zones
+  ['excels','struggles','humans','depends'].forEach(cat => {
+    const zone = document.getElementById('zone-' + cat);
+    Array.from(zone.children).forEach(c => { if (c.tagName !== 'H3') c.remove(); });
+  });
+  itemPlacements = {};
+
+  const shuffled = [...SORT_ITEMS].sort(() => Math.random() - 0.5);
+  shuffled.forEach(item => {
+    const el = createDragItem(item);
+    bank.appendChild(el);
+    itemPlacements[item.id] = 'bank';
+  });
+  updateSortStatus();
+}
+
+function createDragItem(item) {
+  const el = document.createElement('div');
+  el.className = 'drag-item';
+  el.id = 'item-' + item.id;
+  el.textContent = item.text;
+  el.setAttribute('draggable', 'true');
+  el.setAttribute('tabindex', '0');
+  el.setAttribute('role', 'listitem');
+  el.setAttribute('aria-label', item.text + '. Drag to a category.');
+  el.setAttribute('data-id', item.id);
+
+  el.addEventListener('dragstart', e => {
+    draggedItemId = item.id;
+    el.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', item.id);
+  });
+  el.addEventListener('dragend', () => {
+    el.classList.remove('dragging');
+    draggedItemId = null;
+  });
+
+  // keyboard support
+  el.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      showKeyboardMoveDialog(item.id, item.text);
+    }
+  });
+  return el;
+}
+
+function showKeyboardMoveDialog(itemId, itemText) {
+  const cats = [
+    {id:'excels', label:'AI Excels at This'},
+    {id:'struggles', label:'AI Struggles With This'},
+    {id:'humans', label:'Humans Do This Better'},
+    {id:'depends', label:'Depends on Context'},
+    {id:'bank', label:'Return to items bank'}
+  ];
+  const choice = prompt('Move "' + itemText + '" to:\n' +
+    cats.map((c,i) => (i+1) + '. ' + c.label).join('\n') +
+    '\nType a number (1-5):');
+  const num = parseInt(choice);
+  if (num >= 1 && num <= 5) {
+    moveItem(itemId, cats[num-1].id);
+  }
+}
+
+function moveItem(itemId, targetCat) {
+  const el = document.getElementById('item-' + itemId);
+  if (!el) return;
+  el.remove();
+
+  itemPlacements[itemId] = targetCat;
+  const destId = targetCat === 'bank' ? 'items-bank' : 'zone-' + targetCat;
+  document.getElementById(destId).appendChild(el);
+  updateSortStatus();
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.currentTarget.classList.add('drag-over');
+}
+function onDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+function onDrop(e, category) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const id = e.dataTransfer.getData('text/plain');
+  if (id) moveItem(id, category);
+}
+
+// Allow dropping back to bank
+document.addEventListener('DOMContentLoaded', () => {
+  const bank = document.getElementById('items-bank');
+  if (bank) {
+    bank.addEventListener('dragover', e => { e.preventDefault(); bank.classList.add('drag-over'); });
+    bank.addEventListener('dragleave', () => bank.classList.remove('drag-over'));
+    bank.addEventListener('drop', e => {
+      e.preventDefault();
+      bank.classList.remove('drag-over');
+      const id = e.dataTransfer.getData('text/plain');
+      if (id) moveItem(id, 'bank');
+    });
+  }
+});
+
+function updateSortStatus() {
+  const placed = Object.values(itemPlacements).filter(v => v !== 'bank').length;
+  const total = SORT_ITEMS.length;
+  const statusEl = document.getElementById('sort-status-text');
+  const btnEl = document.getElementById('sort-submit-btn');
+  if (placed < total) {
+    statusEl.textContent = placed + ' of ' + total + ' items placed. Place all ' + total + ' to continue.';
+    btnEl.disabled = true;
+  } else {
+    statusEl.textContent = 'All items placed. Ready to check!';
+    btnEl.disabled = false;
+  }
+}
+
+function submitSort() {
+  let correct = 0;
+  const total = SORT_ITEMS.length;
+
+  SORT_ITEMS.forEach(item => {
+    const placed = itemPlacements[item.id];
+    const el = document.getElementById('item-' + item.id);
+    if (placed === item.correct) {
+      correct++;
+      if (el) el.classList.add('correct-item');
+    } else {
+      if (el) el.classList.add('wrong-item');
+    }
+  });
+
+  sortScore = correct * 2;
+
+  const fb = document.getElementById('sort-feedback');
+  if (correct === total) {
+    fb.className = 'sort-feedback success';
+    fb.textContent = 'All ' + total + ' items placed in the best-fit category. See the reasoning below.';
+  } else {
+    fb.className = 'sort-feedback error';
+    fb.textContent = correct + ' of ' + total + ' matched the intended placement. ' + (total - correct) + ' item(s) were moved. The reasoning for each category is shown below.';
+    SORT_ITEMS.forEach(item => {
+      if (itemPlacements[item.id] !== item.correct) {
+        moveItemSilent(item.id, item.correct);
+      }
+    });
+  }
+
+  // Show explanation panels
+  document.getElementById('sort-explanations').classList.add('visible');
+
+  document.getElementById('sort-submit-btn').disabled = true;
+  document.getElementById('sort-submit-btn').textContent = 'Sort Checked';
+
+  setTimeout(() => {
+    const continueBtn = document.createElement('button');
+    continueBtn.className = 'btn-primary';
+    continueBtn.textContent = 'Continue to Questions';
+    continueBtn.style.marginTop = '16px';
+    continueBtn.onclick = startQuiz;
+    continueBtn.setAttribute('aria-label', 'Continue to judgment questions');
+    document.getElementById('sort-submit-area').appendChild(continueBtn);
+  }, 400);
+
+  announce(correct + ' of ' + total + ' items matched. Reasoning shown below each category.');
+}
+
+function moveItemSilent(itemId, targetCat) {
+  const el = document.getElementById('item-' + itemId);
+  if (!el) return;
+  el.remove();
+  itemPlacements[itemId] = targetCat;
+  const destId = 'zone-' + targetCat;
+  document.getElementById(destId).appendChild(el);
+}
+
+// ===================== QUIZ =====================
+function startQuiz() {
+  currentQuestion = 0;
+  questionAttempts = QUIZ_QUESTIONS.map(() => 2);
+  questionScores = QUIZ_QUESTIONS.map(() => 0);
+  quizMaxScore = QUIZ_QUESTIONS.length * 2;
+  showScreen('screen-quiz');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = QUIZ_QUESTIONS[currentQuestion];
+  const container = document.getElementById('question-container');
+  const pct = Math.round(60 + (currentQuestion / QUIZ_QUESTIONS.length) * 25);
+  document.getElementById('quiz-progress-fill').style.width = pct + '%';
+  document.getElementById('quiz-section-label').textContent =
+    'Question ' + (currentQuestion+1) + ' of ' + QUIZ_QUESTIONS.length;
+
+  container.innerHTML = `
+    <div class="question-card">
+      <div class="question-number">Question ${currentQuestion+1} of ${QUIZ_QUESTIONS.length}</div>
+      <p class="question-text">${q.text}</p>
+      <div class="answer-options" id="answer-options" role="group" aria-label="Answer choices">
+        ${q.options.map((opt,i) => `
+          <button class="answer-btn" onclick="selectAnswer(${i})" data-index="${i}"
+                  aria-label="Option ${i+1}: ${opt}">
+            <span aria-hidden="true">${String.fromCharCode(65+i)}.</span> ${opt}
+          </button>
+        `).join('')}
+      </div>
+      <div class="feedback-panel" id="feedback-panel" role="alert"></div>
+    </div>
+  `;
+
+  const attLeft = questionAttempts[currentQuestion];
+  document.getElementById('attempts-indicator').textContent = attLeft + ' attempt' + (attLeft === 1 ? '' : 's') + ' remaining';
+  document.getElementById('quiz-next-btn').disabled = true;
+  document.getElementById('quiz-next-btn').textContent =
+    currentQuestion < QUIZ_QUESTIONS.length - 1 ? 'Next Question' : 'Continue to Reflection';
+}
+
+function selectAnswer(index) {
+  const q = QUIZ_QUESTIONS[currentQuestion];
+  const attLeft = questionAttempts[currentQuestion];
+  const buttons = document.querySelectorAll('.answer-btn');
+  const fb = document.getElementById('feedback-panel');
+  const nextBtn = document.getElementById('quiz-next-btn');
+
+  // Disable all buttons
+  buttons.forEach(b => { b.disabled = true; b.classList.remove('selected'); });
+  buttons[index].classList.add('selected');
+
+  if (index === q.correct) {
+    buttons[index].classList.add('correct');
+    const pts = attLeft === 2 ? 2 : 1;
+    questionScores[currentQuestion] = pts;
+    fb.className = 'feedback-panel correct';
+    fb.innerHTML = '<strong>Correct!</strong> ' + q.explanation;
+    nextBtn.disabled = false;
+    announce('Correct! ' + pts + ' point' + (pts === 1 ? '' : 's') + '.');
+  } else {
+    buttons[index].classList.add('incorrect');
+    questionAttempts[currentQuestion]--;
+
+    if (questionAttempts[currentQuestion] > 0) {
+      // Re-enable remaining buttons except wrong one
+      buttons.forEach((b, i) => { if (i !== index) b.disabled = false; });
+      fb.className = 'feedback-panel hint';
+      fb.innerHTML = '<strong>Not quite.</strong> ' + q.hint;
+      const attNow = questionAttempts[currentQuestion];
+      document.getElementById('attempts-indicator').textContent = attNow + ' attempt' + (attNow === 1 ? '' : 's') + ' remaining';
+      announce('Incorrect. Hint: ' + q.hint);
+    } else {
+      // Show correct
+      buttons[q.correct].classList.add('correct');
+      fb.className = 'feedback-panel incorrect';
+      fb.innerHTML = '<strong>The correct answer is ' + String.fromCharCode(65+q.correct) + '.</strong> ' + q.explanation;
+      nextBtn.disabled = false;
+      document.getElementById('attempts-indicator').textContent = 'No attempts remaining';
+      announce('The correct answer was ' + String.fromCharCode(65+q.correct) + '. ' + q.explanation);
+    }
+  }
+}
+
+function nextQuestion() {
+  if (currentQuestion < QUIZ_QUESTIONS.length - 1) {
+    currentQuestion++;
+    renderQuestion();
+  } else {
+    quizScore = questionScores.reduce((a,b) => a+b, 0);
+    showScreen('screen-reflection');
+  }
+}
+
+// ===================== REFLECTION =====================
+function checkReflection() {
+  const text = document.getElementById('reflection-text').value;
+  const len = text.length;
+  const countEl = document.getElementById('char-count');
+  const countWrap = document.getElementById('char-count-display');
+  const btn = document.getElementById('reflection-submit-btn');
+  countEl.textContent = len;
+  if (len >= 20) {
+    countWrap.className = 'char-count met';
+    btn.disabled = false;
+  } else {
+    countWrap.className = 'char-count';
+    btn.disabled = true;
+  }
+}
+
+// ===================== RESULTS =====================
+function goToResults() {
+  reflectionText = document.getElementById('reflection-text').value;
+  const sortMax = SORT_ITEMS.length * 2;
+  const totalScore = sortScore + quizScore;
+  const totalMax = sortMax + quizMaxScore;
+  const pct = Math.round((totalScore / totalMax) * 100);
+
+  document.getElementById('progress-fill').style.width = '100%';
+  document.getElementById('score-display-big').textContent = pct + '%';
+  document.getElementById('score-label-text').textContent =
+    totalScore + ' out of ' + totalMax + ' points';
+  document.getElementById('sort-score-display').textContent =
+    sortScore + ' / ' + sortMax;
+  document.getElementById('quiz-score-display').textContent =
+    quizScore + ' / ' + quizMaxScore;
+  document.getElementById('total-score-display').textContent =
+    totalScore + ' / ' + totalMax + ' (' + pct + '%)';
+
+  const badgeEl = document.getElementById('badge-preview-el');
+  const badgeTitleEl = document.getElementById('badge-title-display');
+  const badgeSubEl = document.getElementById('badge-sub-display');
+  const badgeBtn = document.getElementById('download-badge-btn');
+
+  if (pct >= 75) {
+    badgeEl.classList.remove('badge-locked');
+    badgeTitleEl.textContent = 'Badge Earned!';
+    badgeSubEl.textContent = 'You scored ' + pct + '%. The Analyst badge is yours.';
+    badgeBtn.style.display = 'inline-block';
+  } else {
+    badgeEl.classList.add('badge-locked');
+    badgeTitleEl.textContent = 'Badge Not Yet Earned';
+    badgeSubEl.innerHTML = 'You scored ' + pct + '%. Score 75% or higher to earn The Analyst badge. <strong>Try again!</strong>';
+  }
+
+  showScreen('screen-results');
+}
+
+// ===================== DOWNLOAD: REFLECTION CARD =====================
+function downloadReflectionCard() {
+  const canvas = document.getElementById('offscreen-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = 700, H = 420;
+  canvas.width = W; canvas.height = H;
+
+  const sortMax = SORT_ITEMS.length * 2;
+  const totalScore = sortScore + quizScore;
+  const totalMax = sortMax + quizMaxScore;
+  const pct = Math.round((totalScore / totalMax) * 100);
+
+  // Background
+  ctx.fillStyle = '#FAF7F2';
+  ctx.fillRect(0, 0, W, H);
+
+  // Header bar
+  ctx.fillStyle = '#2E4A7A';
+  ctx.fillRect(0, 0, W, 80);
+
+  // Header text
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = 'bold 22px Georgia, serif';
+  ctx.fillText('The Classifier', 28, 32);
+  ctx.font = '14px Georgia, serif';
+  ctx.fillStyle = '#E8A020';
+  ctx.fillText('Concept Game Showcase', 28, 56);
+
+  // Name and score
+  ctx.fillStyle = '#2E4A7A';
+  ctx.font = 'bold 18px Georgia, serif';
+  ctx.fillText(playerName, 28, 110);
+
+  ctx.fillStyle = '#3A3A50';
+  ctx.font = '14px Georgia, serif';
+  const d = new Date();
+  ctx.fillText(d.toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'}), 28, 132);
+
+  // Score box
+  ctx.fillStyle = '#2E4A7A';
+  ctx.beginPath();
+  ctx.roundRect(W - 160, 90, 132, 60, 10);
+  ctx.fill();
+  ctx.fillStyle = '#E8A020';
+  ctx.font = 'bold 28px Georgia, serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(pct + '%', W - 94, 127);
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.font = '11px Georgia, serif';
+  ctx.fillText(totalScore + ' / ' + totalMax + ' pts', W - 94, 142);
+  ctx.textAlign = 'left';
+
+  // Divider
+  ctx.strokeStyle = '#D8D0C4';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(28, 160); ctx.lineTo(W - 28, 160);
+  ctx.stroke();
+
+  // Reflection label
+  ctx.fillStyle = '#E8A020';
+  ctx.font = 'bold 11px Georgia, serif';
+  ctx.letterSpacing = '0.1em';
+  ctx.fillText('REFLECTION', 28, 182);
+
+  // Reflection text - wrap
+  ctx.fillStyle = '#1A1A2E';
+  ctx.font = '13px Georgia, serif';
+  const words = reflectionText.split(' ');
+  let line = '', y = 202, maxW = W - 56;
+  for (let w of words) {
+    const test = line + (line ? ' ' : '') + w;
+    if (ctx.measureText(test).width > maxW && line) {
+      ctx.fillText(line, 28, y);
+      line = w; y += 20;
+      if (y > H - 50) { ctx.fillText(line + '...', 28, y); break; }
+    } else { line = test; }
+  }
+  if (line && y <= H - 50) ctx.fillText(line, 28, y);
+
+  // Footer
+  ctx.fillStyle = '#6B6B85';
+  ctx.font = '11px Georgia, serif';
+  ctx.fillText('Concept Game Showcase | The Classifier', 28, H - 18);
+
+  // Badge indicator
+  if (pct >= 75) {
+    ctx.fillStyle = '#3A8C6E';
+    ctx.font = 'bold 12px Georgia, serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('The Analyst Badge Earned', W - 28, H - 18);
+    ctx.textAlign = 'left';
+  }
+
+  const link = document.createElement('a');
+  link.download = 'classifier_reflection_' + playerName.replace(/\s+/g,'_') + '.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+// ===================== DOWNLOAD: BADGE =====================
+function downloadBadge() {
+  const canvas = document.getElementById('offscreen-canvas');
+  const ctx = canvas.getContext('2d');
+  const S = 400;
+  canvas.width = S; canvas.height = S;
+  ctx.clearRect(0, 0, S, S);
+
+  // Outer ring
+  ctx.beginPath();
+  ctx.arc(S/2, S/2, 185, 0, Math.PI * 2);
+  ctx.fillStyle = '#2E4A7A';
+  ctx.fill();
+
+  // Inner ring
+  ctx.beginPath();
+  ctx.arc(S/2, S/2, 170, 0, Math.PI * 2);
+  ctx.strokeStyle = '#E8A020';
+  ctx.lineWidth = 6;
+  ctx.stroke();
+
+  // Inner fill
+  ctx.beginPath();
+  ctx.arc(S/2, S/2, 165, 0, Math.PI * 2);
+  ctx.fillStyle = '#1E3560';
+  ctx.fill();
+
+  // Icon
+  ctx.font = '80px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🔍', S/2, S/2 - 20);
+
+  // Title
+  ctx.fillStyle = '#E8A020';
+  ctx.font = 'bold 22px Georgia, serif';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('THE ANALYST', S/2, S/2 + 60);
+
+  // Tagline
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  ctx.font = '13px Georgia, serif';
+  ctx.fillText('You know how to break it down.', S/2, S/2 + 84);
+
+  // Name
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.font = '11px Georgia, serif';
+  ctx.fillText(playerName, S/2, S/2 + 104);
+
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+
+  const link = document.createElement('a');
+  link.download = 'analyst_badge_' + playerName.replace(/\s+/g,'_') + '.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+// ===================== REPLAY =====================
+function replayGame() {
+  // Reset scores and state
+  sortScore = 0;
+  quizScore = 0;
+  currentQuestion = 0;
+  reflectionText = '';
+  itemPlacements = {};
+
+  // Reset reflection screen
+  document.getElementById('reflection-text').value = '';
+  document.getElementById('char-count-display').className = 'char-count';
+  document.getElementById('char-count').textContent = '0';
+  document.getElementById('reflection-submit-btn').disabled = true;
+
+  // Reset sort feedback box
+  const fb = document.getElementById('sort-feedback');
+  fb.className = 'sort-feedback';
+  fb.textContent = '';
+
+  // Hide explanation panels
+  document.getElementById('sort-explanations').classList.remove('visible');
+
+  // Reset submit button text and state
+  const submitBtn = document.getElementById('sort-submit-btn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Check My Sort';
+
+  // Remove any dynamically added continue button
+  const submitArea = document.getElementById('sort-submit-area');
+  submitArea.querySelectorAll('.btn-primary').forEach(b => {
+    if (b.id !== 'sort-submit-btn') b.remove();
+  });
+
+  // Reset status text
+  document.getElementById('sort-status-text').textContent = 'Place all 8 items to continue.';
+
+  // Rebuild sort items fresh
+  buildSortItems();
+  showScreen('screen-sort');
+}
+</script>
+</body>
+</html>
